@@ -68,8 +68,8 @@ SynthDef.new(\stereoRoute, {
 
 // Create a stereoRoute instance using bus0 as input, default output
 //     bus1 -> Default output
-//     Use after to make sure that is the final node in the tree.
-~stFinal = Synth.after(~stRoute,\stereoRoute, [inBus: ~bus1, outBus: [0,1]], ~outputGroup );
+//     Use tail to make sure that is the final node in the tree.
+~stFinal = Synth.tail(~outputGroup,\stereoRoute, [inBus: ~bus1, outBus: [0,1]]);
 
 // Stop sending output from input
 ~stIn.set(\outBus, ~nullBus);
