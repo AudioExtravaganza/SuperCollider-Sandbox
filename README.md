@@ -7,3 +7,5 @@ Need to have these tools on windows:
 - ``` python3 ```
 - ``` MinGW (g++, gcc, make) ```
 - ``` cmake ```
+
+Template based on https://github.com/supercollider/example-plugins AnalogEcho
