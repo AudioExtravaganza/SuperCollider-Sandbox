@@ -1,11 +1,17 @@
 
 import os 
+import sys
 from shutil import rmtree, copy2, move
 from platform import platform
 import json
 
 
 def main():
+    if len(sys.argv) == 1:
+        print("Specify plugin to build. or use all.")
+        print("\t python updateUGens.py all")
+        print("\t python updateUGens.py [name]")
+        exit()
     file = open("plugins.json")
 
     pluginData = None
@@ -23,8 +29,13 @@ def main():
         os.system("mkdir plugins")
 
     os.chdir("plugins")
+    plugins = 0;
+    if sys.argv[1] == "all":
+        plugins = pluginData['plugins']
+    else:
+        plugins = [sys.argv[1]]
 
-    for p in pluginData['plugins']:
+    for p in plugins:
         os.system("mkdir %s" % p)
         os.chdir(p)
         os.system("dir")
@@ -39,6 +50,9 @@ def main():
             print("Files didnt exist")
         copy2("..\\..\\%s\\%s.sc" % (p, p), ".\%s.sc" % p)
         os.chdir("..")
+
+    
+    
     os.chdir("..")
     
     print("Move plugins to %s" % extension)
