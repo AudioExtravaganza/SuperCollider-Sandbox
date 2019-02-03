@@ -1,20 +1,12 @@
 #include "SC_PlugIn.h"
-
-/****************************************************
- * Authors: 
- * Effect: 
- ***************************************************/
 /*******************************************************************************
 
 From https://github.com/supercollider/example-plugins/tree/master/03-AnalogEcho
 
 ********************************************************************************/
-
 static InterfaceTable *ft;
 
-struct AnalogEcho : public Unit {
-    // Max delay in seconds.
-    float maxdelay;
+struct TemplateEffect : public Unit {
 
     // Size of the buffer in samples, always a power of 2
     int bufsize;
