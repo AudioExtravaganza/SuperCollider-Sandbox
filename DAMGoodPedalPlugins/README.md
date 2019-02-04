@@ -5,8 +5,8 @@ This directory contains effects and other useful plugins to compile for the serv
 ## Building Effects
 
 From this directory, use:
-- ```python makePlugins.py all```.
-- ```python makePlugins.py plugin1 plugin2 ...``` _Note: can provide one or many plugin names_
+- ```python buildPlugins.py all```.
+- ```python buildPlugins.py plugin1 plugin2 ...``` _Note: can provide one or many plugin names_
 
 This will create a directory named __plugins__ move this into your supercollider extensions folder.
 
