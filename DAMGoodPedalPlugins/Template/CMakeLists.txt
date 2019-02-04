@@ -11,7 +11,7 @@ include_directories(${SC_PATH}/common)
 
 set(CMAKE_SHARED_MODULE_PREFIX "")
 if(APPLE OR WIN32)
-set(CMAKE_SHARED_MODULE_SUFFIX ".scx")
+    set(CMAKE_SHARED_MODULE_SUFFIX ".scx")
 endif()
 
 option(SUPERNOVA "Build plugins for supernova" OFF)

@@ -5,17 +5,15 @@ from shutil import rmtree, copy2, move
 from platform import platform
 import json
 
-
 def main():
     if len(sys.argv) == 1:
         print("Specify plugin to build. or use all.")
         print("\t python updateUGens.py all")
-        print("\t python updateUGens.py [name]")
+        print("\t python updateUGens.py <name1> <name2> ...")
         exit()
     file = open("plugins.json")
 
     pluginData = None
-
 
 
     if file:
@@ -29,18 +27,24 @@ def main():
         os.system("mkdir plugins")
 
     os.chdir("plugins")
-    plugins = 0;
+    plugins = 0
     if sys.argv[1] == "all":
         plugins = pluginData['plugins']
     else:
-        plugins = [sys.argv[1]]
+        plugins = [x for x in sys.argv[1:]]
+
 
     for p in plugins:
         os.system("mkdir %s" % p)
         os.chdir(p)
         os.system("dir")
         os.system('cmake -G "%s" ..\\..\\%s\\. -DSC_PATH=%s' % (settings['Generator'], p, settings['SC_PATH'].replace("/", "\\")))
-        os.system("mingw32-make.exe")
+        
+        if(os.system("mingw32-make.exe") != 0):
+            print("\n\nMake Failed!")
+            print("Expected reason, could not find Supercollider source at:")
+            print(settings['SC_PATH'])
+        
         try:
             rmtree("CMakeFiles")
             os.remove("Makefile")
