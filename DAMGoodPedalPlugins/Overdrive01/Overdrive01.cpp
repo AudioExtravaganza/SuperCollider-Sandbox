@@ -47,9 +47,9 @@ void Overdrive01_Dtor(Overdrive01* unit) {
 void Overdrive01_next_a(Overdrive01 * unit, int inNumSamples) {
     float * out = OUT(0);
     float * in = IN(0);
-
+    float amount = IN0(1);
     for(int i = 0; i < inNumSamples; ++i){
-        out[i] = in[i] + sqrt(in[i]);
+        out[i] = in[i] + (in[1] * amount);
     }
 
 }
