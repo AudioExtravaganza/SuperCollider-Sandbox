@@ -11,7 +11,7 @@ w = Window.new("DAM Good Pedal", Rect(200, 200, 800, 600)).front;
 ~dropdown.action = { arg menu; };
 
 ~synth = 0;
-
+~activeS = 0;
 
 f = FreqScopeView(w, Rect(300, 60, 200, 100));
 f.active = true;
@@ -24,8 +24,8 @@ f.active = true;
 ~k1.action = {
 	arg k;
 	~k1W.string = "Param 1 Value:" + k.value.asStringPrec(3);
-	if(~synth1 != 0){
-		~synth1.set(\p1, k.value);
+	if(~activeS != 0){
+		~activeS.set(\p1, k.value);
 	}
 };
 ~k1L = StaticText(w, Rect(100, 60, 80, 20));
@@ -37,8 +37,8 @@ f.active = true;
 ~k2.action = {
 	arg k;
 	~k2W.string = "Param 2 Value:" + k.value.asStringPrec(3);
-	if(~synth1 != 0){
-		~synth1.set(\p2, k.value);
+	if(~activeS != 0){
+		~activeS.set(\p2, k.value);
 	}
 };
 
@@ -51,8 +51,8 @@ f.active = true;
 ~k3.action = {
 	arg k;
 	~k3W.string = "Param 3 Value:" + k.value.asStringPrec(3);
-	if(~synth1 != 0){
-		~synth1.set(\p3, k.value);
+	if(~activeS != 0){
+		~activeS.set(\p3, k.value);
 	}
 };
 
@@ -65,8 +65,8 @@ f.active = true;
 ~k4.action = {
 	arg k;
 	~k4W.string = "Param 2 Value:" + k.value.asStringPrec(3);
-	if(~synth1 != 0){
-		~synth1.set(\p4, k.value);
+	if(~activeS != 0){
+		~activeS.set(\p4, k.value);
 	}
 
 };
@@ -103,7 +103,8 @@ f.active = true;
 ~pe1.states = [["off", Color.white, Color.red], ["on", Color.black, Color.green]];
 ~pe1.action = {
 	arg button;
-
+	button.value.postln;
+	~dropdown.item.postln;
 	if(button.value == 1){
 		~synth1 = Synth(~dropdown.item, args:(
 			in:0,
@@ -113,6 +114,7 @@ f.active = true;
 			p3: ~k3.value,
 			p4: ~k4.value,
 		));
+		~activeS = ~synth1;
 	}
 	{
 		if(~synth1 != 0)
@@ -131,6 +133,7 @@ f.active = true;
 ~pe2.states = [["off", Color.white, Color.red], ["on", Color.black, Color.green]];
 ~pe2.action = {
 	arg button;
+
 	if(button.value == 1){
 		~synth2 = Synth(~dropdown.item, args:(
 			in:0,
@@ -140,6 +143,7 @@ f.active = true;
 			p3: ~k3.value,
 			p4: ~k4.value,
 		));
+		~activeS = ~synth2;
 	}
 	{
 		if(~synth2 != 0)
@@ -167,6 +171,7 @@ f.active = true;
 			p3: ~k3.value,
 			p4: ~k4.value,
 		));
+		~activeS = ~synth3;
 	}
 	{
 		if(~synth3 != 0)

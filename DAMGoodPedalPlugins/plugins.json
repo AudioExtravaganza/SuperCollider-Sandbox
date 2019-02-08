@@ -1,6 +1,6 @@
 {
     "Windows": {
-        "ExtensionDir": "AppData/Local/SuperCollider/Extensions/",
+        "ExtensionDir": "/AppData/Local/SuperCollider/Extensions/",
         "SC_PATH": "C:/supercollider/",
         "Generator": "MinGW Makefiles",
         "Make" : "mingw32-make"
