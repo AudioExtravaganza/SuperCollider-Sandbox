@@ -3,7 +3,13 @@
         "ExtensionDir": "/AppData/Local/SuperCollider/Extensions/",
         "SC_PATH": "C:/supercollider/",
         "Generator": "MinGW Makefiles",
-        "Make" : "mingw32-make"
+        "Make": "mingw32-make"
+    },
+    "Darwin": {
+        "ExtensionDir": "/Library/Application Support/SuperCollider/Extensions/",
+        "SC_PATH": "~/Capstone/supercollider_src",
+        "Generator": "Unix Makefiles",
+        "Make": "make"
     },
 
 
@@ -11,5 +17,4 @@
         "Overdrive01",
         "DirectOut"
     ]
-
 }
