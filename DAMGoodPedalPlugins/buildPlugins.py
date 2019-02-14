@@ -35,7 +35,7 @@ def main():
     try:
         settings = pluginData[platformName]
     except:
-        print "Settings not found for platform:", platformName
+        print ("Settings not found for platform:", platformName)
         exit()
 
     # Locate supercollider extensions folder
@@ -58,13 +58,13 @@ def main():
         localPath = getPath("../../%s/." % p)
         cmd = 'cmake -G "%s" %s -DSC_PATH=%s' % (
             settings['Generator'], localPath, getPath(settings['SC_PATH']))
-        print cmd
+        print (cmd)
         os.system(cmd)
 
         if(os.system(pluginData[platformName]["Make"]) != 0):
-            print "\n\nMake Failed!"
-            print "Expected reason, could not find Supercollider source at:", settings[
-                'SC_PATH'], "\n\n"
+            print( "\n\nMake Failed!")
+            print ("Expected reason, could not find Supercollider source at:", settings[
+                'SC_PATH'], "\n\n")
 
         try:
             rmtree("CMakeFiles")
