@@ -18,18 +18,20 @@ f.active = true;
 
 ~knobSize = 50;
 
+~k1 = DAMKnob.new();
+~k1.build(5);
 
-~k1 = Knob.new(w, Rect(100, 10, ~knobSize, ~knobSize));
-~k1.value = 0.5;
-~k1.action = {
-	arg k;
-	~k1W.string = "Param 1 Value:" + k.value.asStringPrec(3);
-	if(~activeS != 0){
-		~activeS.set(\p1, k.value);
-	}
-};
-~k1L = StaticText(w, Rect(100, 60, 80, 20));
-~k1L.string = "Param 1";
+// ~k1 = Knob.new(w, Rect(100, 10, ~knobSize, ~knobSize));
+// ~k1.value = 0.5;
+// ~k1.action = {
+// 	arg k;
+// 	~k1W.string = "Param 1 Value:" + k.value.asStringPrec(3);
+// 	if(~activeS != 0){
+// 		~activeS.set(\p1, k.value);
+// 	}
+// };
+// ~k1L = StaticText(w, Rect(100, 60, 80, 20));
+// ~k1L.string = "Param 1";
 
 
 ~k2 = Knob.new(w, Rect(200, 40, ~knobSize, ~knobSize));
@@ -227,5 +229,6 @@ SynthDef("chorus", {
 }).add;
 
 )
+
 
 Server.local.queryAllNodes;
