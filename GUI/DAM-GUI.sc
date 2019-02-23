@@ -11,7 +11,6 @@ DAMComponent
 	Serves as the base class for other components. Gives an interface
 	for binding actions and setting up GUI components
 **********************************************************************/
-
 DAMComponent{
 	// Displays the name of the component
 	var <>label;
@@ -22,6 +21,8 @@ DAMComponent{
 	// The componenet itself. Expects a GUI component that recieves input
 	// 	EX. Knob, Button, Menu
 	var <>component;
+
+	var <>dispatcher;
 
 	/******************************************************************
 	Build
@@ -89,6 +90,24 @@ DAMComponent{
 	}
 
 	/******************************************************************
+	Bind OSC
+		Override bind OSC from base class to send the string from menu
+	*******************************************************************/
+	bindOSC {
+		// Create the dispatcher
+		this.dispatcher = NetAddr.new("127.0.0.1", 57120);
+
+		// Add dispatch action
+		this.addAction("dispatch", {
+			arg name, val;
+
+			// Send the message name, with the parameter component value
+			this.dispatcher.sendMsg("/" ++ name, this.component.value);
+		});
+
+	}
+
+	/******************************************************************
 	Add Action
 		Adds an action
 		Parameters: name of action and the action itself (function)
@@ -128,7 +147,21 @@ DAMComponent{
 	getName{
 		^this.label.string;
 	}
+
+	/******************************************************************
+	Free
+		Frees the componenet and dispatcher
+
+		! If you allocate anything other than the componenet
+		! or dispatcher in a child class, create a new free method and
+		! use 'super.free;'
+	*******************************************************************/
+	free {
+		this.component.free;
+		this.dispatcher.free;
+	}
 }
+
 
 /*********************************************************************
 DAMKnob
@@ -201,9 +234,8 @@ DAMMenu : DAMComponent {
 	*******************************************************************/
 	runActions {
 		arg m;
-
 		// If no menu items exist, action is meaningless
-		if(this.items.size > 1){
+		if(this.items.size >= 1){
 
 			// For all actions
 			this.actions.asArray.do{
@@ -217,6 +249,24 @@ DAMMenu : DAMComponent {
 	}
 
 	/******************************************************************
+	Bind OSC
+		Override bind OSC from base class to send the string from menu
+	*******************************************************************/
+	bindOSC {
+		// Create the dispatcher
+		this.dispatcher = NetAddr.new("127.0.0.1", 57120);
+
+		// Add dispatch action
+		this.addAction("dispatch", {
+			arg name, val;
+
+			// Send the message name, with the parameter menu string
+			this.dispatcher.sendMsg("/" ++ name, this.items.at(this.component.value));
+		});
+
+	}
+
+	/******************************************************************
 	Add Item
 		Adds an Item to the menu
 		Parameters: String of item to add to menu.
@@ -226,7 +276,10 @@ DAMMenu : DAMComponent {
 		this.items.add(item);
 
 		// Update menu items to item list, cast to array
-		this.menu.items = this.items.asArray();
+		this.component.items = this.items.asArray();
+		if(this.items.size == 1){
+			this.component.valueAction = this.items[0];
+		}
 	}
 
 	/******************************************************************
@@ -247,8 +300,17 @@ DAMMenu : DAMComponent {
 		};
 
 		// Update menu items to item list, cast to array
-		this.menu.items = this.items.asArray();
+		this.component.items = this.items.asArray();
 	}
+
+	/******************************************************************
+	Current
+		Gets current menu value
+	*******************************************************************/
+	current {
+		^this.items.at(this.component.value);
+	}
+
 }
 
 /*********************************************************************
@@ -353,7 +415,7 @@ DAMDebugger {
 
 		// Build 2 StaticTexts one for label and the other to show value
 		label = StaticText(this.view, Rect(this.x, this.y, 140, 20));
-		value = StaticText(this.view, Rect(this.x + 140, this.y, 80, 20));
+		value = StaticText(this.view, Rect(this.x + 140, this.y, 140, 20));
 
 		// Set fonts
 		label.font_(Font("Lucida Sans", 12));
@@ -429,10 +491,22 @@ DAMDebugger {
 		// Force Action on item to update debugger
 		item.forceAction();
 	}
+
+	/******************************************************************
+	Free
+		Frees all fields
+	*******************************************************************/
+	free {
+
+		// For all fields
+		this.fields.do{
+			arg f;
+
+			// Free
+			f.free;
+		}
+	}
 }
-
-
-
 
 /*********************************************************************
 DAM GUI
@@ -447,10 +521,10 @@ DAMGUI {
 	var <>knobs;
 	var <>menu;
 	var <>pedals;
-
 	// Other output
 	var <>dbg;
 	var <>scope;
+	var <> freeActions;
 
 	/******************************************************************
 	Build
@@ -459,9 +533,10 @@ DAMGUI {
 		Parameters: Debugging (true/false)
 	*******************************************************************/
 	build {
-		arg debug = false;
+		arg debug = false, useOSC = true;
 
 		var x, y, h;
+
 
 		// Default height to 400
 		h = 400;
@@ -481,10 +556,14 @@ DAMGUI {
 		// Create 4 DAMKnobs
 		this.knobs = Array.fill(4, {arg i; DAMKnob.new();});
 
+
 		// Build the Knobs with the correct names and positions
 		this.knobs.do{
 			arg item, i;
 			item.build(this.win, Rect(x[i], y[i], 50, 50,), ("Knob " ++ (i+1).asDigit));
+			if (useOSC){
+				item.bindOSC();
+			};
 		};
 
 		// Set X values for the DAMPedals
@@ -497,12 +576,17 @@ DAMGUI {
 		this.pedals.do{
 			arg item, i;
 			item.build(this.win, Rect(x[i], 300, 50, 50), ("Pedal " ++ (i + 1).asDigit));
+			if (useOSC){
+				item.bindOSC();
+			};
 		};
 
 		// Create and build the menu
 		this.menu = DAMMenu.new();
 		this.menu.build(this.win, Rect(200, 20, 400, 40), "Menu");
-
+		if(useOSC){
+			this.menu.bindOSC();
+		};
 		// Create the Frequency Scope
 		this.scope = FreqScopeView(this.win, Rect(200, 60, 400, 200));
 		this.scope.active = true;
@@ -530,10 +614,22 @@ DAMGUI {
 		};
 		this.win.refresh;
 
+		// Defualt DBG to null
+		this.dbg = nil;
+
 		// If debugging, initialize debugger
 		if(debug){
 			this.initDebug();
-		}
+		};
+
+		// Bind event for window close
+		this.win.onClose({
+			// Free self
+			this.free;
+		});
+
+		// Create new list of actions to go through on close
+		this.freeActions = List(0);
 	}
 
 	/******************************************************************
@@ -564,5 +660,99 @@ DAMGUI {
 			arg item, i;
 			this.dbg.bindString(item);
 		};
+	}
+
+
+	/******************************************************************
+	Add Synth
+		Adds name to the menu
+	*******************************************************************/
+	addSynth {
+		arg name;
+		this.menu.addItem(name);
+	}
+
+
+	/******************************************************************
+	Force OSC Update
+		Makes all OSC objects run through actions
+	*******************************************************************/
+	forceOSCUpdate {
+
+		// For all knobs
+		this.knobs.do{
+			arg k;
+
+			// Force action
+			k.forceAction;
+		};
+
+		// Force menu cation
+		this.menu.forceAction;
+
+		// For all pedals
+		this.pedals.do{
+			arg p;
+
+			// Force action
+			p.forceAction;
+		};
+	}
+
+
+	/******************************************************************
+	Add Close Action
+		Adds an action to do when the window is closed
+
+		Parameters: action, a function to be executed on window close
+	*******************************************************************/
+	addCloseAction{
+		arg action;
+
+		// Adds the action to the array of free actions
+		this.freeActions.add(action);
+	}
+
+
+	/******************************************************************
+	Free
+		Frees all the componenets belonging to this class
+	*******************************************************************/
+	free{
+
+		// Kill the scope
+		this.scope.kill;
+
+		// For all Knobs
+		this.knobs.do{
+			arg k;
+
+			// Free
+			k.free;
+		};
+
+		// Free the menu
+		this.menu.free;
+
+		// For all pedals
+		this.pedals.do{
+			arg p;
+
+			// Free
+			p.free;
+		};
+
+		// If the debugger is not null, free it
+		if(this.dbg != nil){
+			this.dbg.free;
+		};
+
+		// For all free actions
+		this.freeActions.do{
+			arg act;
+
+			// Execute
+			act.value;
+		}
 	}
 }
