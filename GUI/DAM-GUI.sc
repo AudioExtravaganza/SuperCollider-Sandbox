@@ -521,6 +521,7 @@ DAMGUI {
 	var <>knobs;
 	var <>menu;
 	var <>pedals;
+
 	// Other output
 	var <>dbg;
 	var <>scope;
@@ -539,19 +540,19 @@ DAMGUI {
 
 
 		// Default height to 400
-		h = 400;
+		h = 600;
 
 		// If debugging active, set to 600
 		if(debug){
-			h = 600;
+			h = 800;
 		};
 
 		// Create window
 		this.win = Window.new("DAM Good Pedal", Rect(200, 200, 800, h)).front;
 
 		// Setup arrays of X, Y values for knobs
-		x = [25, 125, 25, 125];
-		y = [40, 90, 120, 170];
+		x = [135, 295, 455, 615];
+		y = Array.fill(4, {arg i; 300});
 
 		// Create 4 DAMKnobs
 		this.knobs = Array.fill(4, {arg i; DAMKnob.new();});
@@ -560,11 +561,12 @@ DAMGUI {
 		// Build the Knobs with the correct names and positions
 		this.knobs.do{
 			arg item, i;
-			item.build(this.win, Rect(x[i], y[i], 50, 50,), ("Knob " ++ (i+1).asDigit));
+			item.build(this.win, Rect(x[i], y[i], 50, 50), ("Knob " ++ (i+1).asDigit));
 			if (useOSC){
 				item.bindOSC();
 			};
 		};
+
 
 		// Set X values for the DAMPedals
 		x = [175, 375, 575];
@@ -575,7 +577,7 @@ DAMGUI {
 		// Build the Pedals with the correct names and positions
 		this.pedals.do{
 			arg item, i;
-			item.build(this.win, Rect(x[i], 300, 50, 50), ("Pedal " ++ (i + 1).asDigit));
+			item.build(this.win, Rect(x[i], 450, 50, 50), ("Pedal " ++ (i + 1).asDigit));
 			if (useOSC){
 				item.bindOSC();
 			};
@@ -583,20 +585,20 @@ DAMGUI {
 
 		// Create and build the menu
 		this.menu = DAMMenu.new();
-		this.menu.build(this.win, Rect(200, 20, 400, 40), "Menu");
+		this.menu.build(this.win, Rect(160, 50, 320, 40), "Menu");
 		if(useOSC){
 			this.menu.bindOSC();
 		};
 		// Create the Frequency Scope
-		this.scope = FreqScopeView(this.win, Rect(200, 60, 400, 200));
+		this.scope = FreqScopeView(this.win, Rect(160, 90, 320, 150));
 		this.scope.active = true;
 
 		// Draw Rectangle around pedal interface
 		this.win.drawFunc = {
 			Color.black.set;
 			Pen.moveTo(10@10);
-			Pen.lineTo(10@390);
-			Pen.lineTo(790@390);
+			Pen.lineTo(10@590);
+			Pen.lineTo(790@590);
 			Pen.lineTo(790@10);
 			Pen.lineTo(10@10);
 			Pen.stroke;
@@ -604,11 +606,11 @@ DAMGUI {
 			// If Debugging, draw rectangle around debugging
 			//	interface
 			if(debug){
-				Pen.moveTo(10@410);
-				Pen.lineTo(10@590);
-				Pen.lineTo(790@590);
-				Pen.lineTo(790@410);
-				Pen.lineTo(10@410);
+				Pen.moveTo(10@610);
+				Pen.lineTo(10@790);
+				Pen.lineTo(790@790);
+				Pen.lineTo(790@610);
+				Pen.lineTo(10@610);
 				Pen.stroke;
 			}
 		};
@@ -623,10 +625,7 @@ DAMGUI {
 		};
 
 		// Bind event for window close
-		this.win.onClose({
-			// Free self
-			this.free;
-		});
+		this.win.onClose_({ this.free;});
 
 		// Create new list of actions to go through on close
 		this.freeActions = List(0);
@@ -644,7 +643,7 @@ DAMGUI {
 
 		// Create and build the debugger
 		this.dbg = DAMDebugger.new();
-		this.dbg.build(this.win, Rect(10, 410, 780, 590));
+		this.dbg.build(this.win, Rect(10, 610, 780, 790));
 
 		// Bind the knobs
 		this.knobs.do{
@@ -712,7 +711,6 @@ DAMGUI {
 		// Adds the action to the array of free actions
 		this.freeActions.add(action);
 	}
-
 
 	/******************************************************************
 	Free
