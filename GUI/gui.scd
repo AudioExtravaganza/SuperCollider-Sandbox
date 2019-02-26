@@ -1,49 +1,63 @@
 (
 
+s.waitForBoot({
 
-// Add simple Sine synthdef
-SynthDef("SimpleSine", {
-	arg in = 0, p1 = 0, p2 = 0 , p3 = 0, p4 = 0;
-	var signal, freq;
+	// Change this to the location that you have cloned to
+	~src = "~/Desktop/SuperCollider-Sandbox/GUI/".standardizePath;
 
-	// Use frequencies 60 - 440
-	freq = (p1 * 380) + 60;
+	// Loads all scenes into a list called ~scenes
+	(~src ++ "/resources/scenes.scd").load;
 
-	// Create Sine Oscillator (make stereo)
-	signal = SinOsc.ar(freq, p2, p3, p4)!2;
+	// Loads all synthdefs for effects into server
+	(~src ++ "/resources/effects.scd").load;
 
-	// Output to general out bus
-	Out.ar(0, signal);
 
-}).add; // Add to the server
 
-// Debugging on, send data over OSC
-g = DAMGUI.new();
-g.build(true, true);
+	// Debugging on, send data over OSC
+	g = DAMGUI.new();
+	g.build(true, true);
 
-// Add the synth to the GUI
-g.addSynth("SimpleSine");
+	// Setup the server
+	c = DAMPedalController.new();
+	c.build(s);
 
-// Setup the server
-c = DAMPedalController.new();
-c.build(s);
+	// For all scenes in scenes.scd
+	~scenes.do{
+		arg item;
+		// Add to the GUI
+		g.addScene(item.getName());
 
-// Bind all OSC messages
-c.bindOSC('/Knob 1', 'k', 1);
-c.bindOSC('/Knob 2', 'k', 2);
-c.bindOSC('/Knob 3', 'k', 3);
-c.bindOSC('/Knob 4', 'k', 4);
+		// Add scene to the controller
+		c.addScene(item.getName(), item);
+	};
 
-c.bindOSC('/Pedal 1', 'p', 1);
-c.bindOSC('/Pedal 2', 'p', 2);
-c.bindOSC('/Pedal 3', 'p', 3);
 
-c.bindOSC('/Menu', 'm');
 
-// Forcefully send OSC message to make GUI
-//    match server
-g.forceOSCUpdate;
+	// Bind all OSC messages
+	c.bindOSC('/Knob 1', 'k', 1);
+	c.bindOSC('/Knob 2', 'k', 2);
+	c.bindOSC('/Knob 3', 'k', 3);
+	c.bindOSC('/Knob 4', 'k', 4);
 
-g.addCloseAction({c.free});
+	c.bindOSC('/Pedal 1', 'p', 1);
+	c.bindOSC('/Pedal 2', 'p', 2);
+	c.bindOSC('/Pedal 3', 'p', 3);
+
+	c.bindOSC('/Menu', 'm');
+
+	g.forceOSCUpdate;
+
+	// Free the controller, then stop the server.
+	g.addCloseAction({c.free; s.quit;});
+});
+
 )
 
+s.scope;
+
+//Good for debugging
+(
+OSCFunc.trace(true, true); // Show OSC messages
+OSCFunc.trace(false); // Stop showing OSC messages
+s.queryAllNodes; // Show all groups and nodes
+)
