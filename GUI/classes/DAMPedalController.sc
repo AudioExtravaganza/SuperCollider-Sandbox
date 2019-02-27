@@ -72,6 +72,7 @@ DAMPedalController {
 		arg bus;
 		this.inBus = bus;
 		if(this.currentScene != nil){
+			this.inBus.println;
 			this.currentScene.updateInputBus(this.inBus);
 		}
 	}
@@ -109,7 +110,7 @@ DAMPedalController {
 	*******************************************************************/
 	updateScene {
 		arg name;
-
+		name.postln;
 		// Check that a scene is running
 		if(this.currentScene != nil){
 			// If we are trying to launch the same scene that is
@@ -306,6 +307,7 @@ DAMScene {
 	*******************************************************************/
 	updateInputBus{
 		arg bus;
+		"updating scene bus".postln;
 		this.busses[0] = bus;
 	}
 
