@@ -19,3 +19,11 @@
 ~temp.setEffect('Reverb_Base', 2);
 
 ~scenes.add(~temp);
+
+~temp = DAMScene.new();
+~temp.prebuild('(Reverb | Distort | Filter)');
+~temp.setEffect('Reverb_Base', 0);
+~temp.setEffect('Distort', 1);
+~temp.setEffect('DAMLPF', 2);
+
+~scenes.add(~temp);
