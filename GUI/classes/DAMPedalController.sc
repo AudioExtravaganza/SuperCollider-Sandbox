@@ -110,7 +110,6 @@ DAMPedalController {
 	*******************************************************************/
 	updateScene {
 		arg name;
-		name.postln;
 		// Check that a scene is running
 		if(this.currentScene != nil){
 			// If we are trying to launch the same scene that is
@@ -286,7 +285,6 @@ DAMScene {
 
 		// Do not free busses[0] or busses[3]
 		this.busses = [inputBus, Bus.audio(Server.internal, 2), Bus.audio(Server.internal, 2), outputBus];
-		this.busses.postln;
 		// Reference to knobs !Do not free in this class
 		this.knobs = knobs;
 
@@ -307,7 +305,6 @@ DAMScene {
 	*******************************************************************/
 	updateInputBus{
 		arg bus;
-		"updating scene bus".postln;
 		this.busses[0] = bus;
 	}
 
@@ -348,7 +345,6 @@ DAMScene {
 
 		// Predefine args (same for every call)
 		args = [\in, this.busses[index], \out, this.busses[index+1]];
-		args.postln;
 
 		// If starting a new synth;
 		if(state == 1){
@@ -383,7 +379,6 @@ DAMScene {
 				this.synths[index] = Synth.after(this.synths[index - 1], "Route", args);
 			};
 		};
-		this.synths[index].postln;
 	}
 
 	/******************************************************************
