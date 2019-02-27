@@ -47,6 +47,16 @@ s.waitForBoot({
 
 	g.forceOSCUpdate;
 
+	// Setup wav file as input, change to false to disable
+	if(true){
+		// Change this path to point to your WAV file
+		~inputWav = "~/Documents/SC/wavs/guitar_riff.wav".standardizePath.postln ;
+		~wavBus = Bus.audio(s, 2);
+		~wavBuf = Buffer.read(s, ~inputWav); // remember to free the buffer later.
+		~wavSynth = Synth.new("PlayBuffer", [\buffer, ~wavBuf,  \out, ~wavBus], c.inGroup);
+		c.setInputBus(~wavBus);
+	};
+
 	// Free the controller, then stop the server.
 	g.addCloseAction({c.free; s.quit;});
 });
@@ -56,8 +66,8 @@ s.waitForBoot({
 s.scope;
 
 //Good for debugging
-(
+
 OSCFunc.trace(true, true); // Show OSC messages
 OSCFunc.trace(false); // Stop showing OSC messages
 s.queryAllNodes; // Show all groups and nodes
-)
+
