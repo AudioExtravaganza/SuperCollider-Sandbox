@@ -3,27 +3,18 @@
 
 
 ~temp = DAMScene.new();
-~temp.prebuild('(Sine | Saw | Square)');
-~temp.setEffect('SimpleSine', 0);
-~temp.setEffect('SimpleSaw', 1);
-~temp.setEffect('SimpleSquare',2);
-
-~scenes.add(~temp);
-
-
-
-~temp = DAMScene.new();
-~temp.prebuild('(Saw | Pulser | Reverb)');
-~temp.setEffect('SimpleSaw', 0);
-~temp.setEffect('PulseSig', 1);
-~temp.setEffect('Reverb_Base', 2);
-
-~scenes.add(~temp);
-
-~temp = DAMScene.new();
 ~temp.prebuild('(Reverb | Distort | Filter)');
-~temp.setEffect('Reverb_Base', 0);
-~temp.setEffect('Distort', 1);
-~temp.setEffect('DAMLPF', 2);
+~tempChain = DAMChain.new();
+~tempChain.preBuild('Reverb_Base', [true, true, false, false]);
+~temp.setChain(~tempChain, 0);
+
+~tempChain = DAMChain.new();
+~tempChain.preBuild('Distort', [false, false, true, false]);
+~temp.setChain(~tempChain, 1);
+
+~tempChain = DAMChain.new();
+~tempChain.preBuild('DAMLPF', [false, false, false, true]);
+~temp.setChain(~tempChain, 2);
+
 
 ~scenes.add(~temp);

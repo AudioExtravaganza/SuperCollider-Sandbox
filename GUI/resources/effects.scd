@@ -16,7 +16,7 @@ SynthDef("Reverb_Base", {
 	signal = In.ar(in, 2);
 
 	// Meaningless operations
-	signal = FreeVerb.ar(signal, p1, p2, p3, p4);
+	signal = FreeVerb.ar(signal, p1, p2, 0.5, 1);
 
 	Out.ar(out, signal);
 }).add;  // Add to the server !!!!! Dont forget to do this
@@ -30,53 +30,6 @@ SynthDef("PulseSig", {
 	Out.ar(out, signal);
 }).add;
 
-// Add simple Sine synthdef
-SynthDef("SimpleSine", {
-	arg in = 0, out = 0, p1 = 0, p2 = 0 , p3 = 0, p4 = 0;
-	var signal, freq;
-
-	// Use frequencies 60 - 440
-	freq = (p1 * 380) + 60;
-
-	// Create Sine Oscillator (make stereo)
-	signal = SinOsc.ar(freq, p2, p3, p4)!2;
-
-	// Output to general out bus
-	Out.ar(out, signal);
-
-}).add; // Add to the server
-
-// Add simple Square synthdef
-SynthDef("SimpleSquare", {
-	arg in = 0, out = 0, p1 = 0, p2 = 0 , p3 = 0, p4 = 0;
-	var signal, freq;
-
-	// Use frequencies 60 - 440
-	freq = (p1 * 380) + 60;
-
-	// Create Square Oscillator (make stereo)
-	signal = LFPulse.ar(freq, p2, p3, p4)!2;
-
-	// Output to general out bus
-	Out.ar(out, signal);
-
-}).add; // Add to the server
-
-// Add simple Sine synthdef
-SynthDef("SimpleSaw", {
-	arg in = 0, out = 0, p1 = 0, p2 = 0 , p3 = 0, p4 = 0;
-	var signal, freq;
-
-	// Use frequencies 60 - 440
-	freq = (p1 * 380) + 60;
-
-	// Create Saw Oscillator (make stereo)
-	signal = LFSaw.ar(freq, p2, p3, p4)!2;
-
-	// Output to general out bus
-	Out.ar(out, signal);
-
-}).add; // Add to the server
 
 SynthDef.new('PlayBuffer', {
 	arg buffer = 0, out;
@@ -104,11 +57,11 @@ SynthDef.new('Distort', {
 }).add;
 
 SynthDef.new('DAMLPF', {
-	arg in, out, p1, p2, p3, p4;
+	arg in, out, p1, p2 = 1, p3 = 0.5, p4;
 	var signal, freq;
 	freq = 80 + (p1 * 1600);
 	signal = In.ar(in, 2);
-	signal = LPF.ar(signal, freq, p2, p3);
+	signal = LPF.ar(signal, freq, 1, 0);
 	Out.ar(out, signal);
 
 }).add;
