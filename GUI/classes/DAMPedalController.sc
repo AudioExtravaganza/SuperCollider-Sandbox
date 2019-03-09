@@ -457,7 +457,7 @@ DAMScene {
 			if(item){
 				item.free;
 			}
-		}
+		};
 
 		// Free the busses
 		this.busses.do{
@@ -465,7 +465,7 @@ DAMScene {
 			if(item != nil){
 				item.free;
 			}
-		}
+		};
 
 		// Free all synths (master in and out routes)
 		this.synths.do{
@@ -721,5 +721,15 @@ DAMChain{
 
 		// Update the state, we were successful in starting synth
 		this.state = 2;
+	}
+
+	/******************************************************************
+	Free
+		Frees local synth
+	*******************************************************************/
+	free{
+		if(this.synth != nil){
+			this.synth.free;
+		}
 	}
 }
