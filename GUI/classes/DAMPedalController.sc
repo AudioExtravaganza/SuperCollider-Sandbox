@@ -99,7 +99,7 @@ DAMPedalController {
 	updateSwitch {
 		arg state, index;
 		if(this.currentScene != nil){
-			this.currentScene.updateSwitch(state, index);
+			this.currentScene.updateChain(state, index);
 		};
 	}
 
@@ -233,6 +233,7 @@ DAMScene {
 
 	// Array of local audio busses (stereo)
 	var <> busses;
+	var <> chains;
 
 	/******************************************************************
 	Prebuild
@@ -253,6 +254,8 @@ DAMScene {
 
 		// Set effect names to tombstone values
 		this.effects = Array.fill(3, {arg i; -1});
+
+		this.chains = Array.fill(3, {arg i; DAMChain.new()});
 	}
 
 	/******************************************************************
@@ -284,18 +287,33 @@ DAMScene {
 		this.group = Group.after(node);
 
 		// Do not free busses[0] or busses[3]
-		this.busses = [inputBus, Bus.audio(Server.internal, 2), Bus.audio(Server.internal, 2), outputBus];
+		this.busses = [Bus.audio(Server.local, 2), Bus.audio(Server.local, 2), Bus.audio(Server.local, 2),  Bus.audio(Server.local, 2)];
 		// Reference to knobs !Do not free in this class
 		this.knobs = knobs;
-
+		this.busses.postln;
 		// Create array of size 3
-		this.synths = [0, 0, 0];
 
-		// Make route in -> bus[1] -> bus[2] -> out
-		// Each arrow can be replaced with an effect.
-		this.synths[0] = Synth.new("Route", [\in, this.busses[0], \out, this.busses[1]], this.group);
-		this.synths[1] = Synth.after(this.synths[0], "Route", [\in, this.busses[1], \out, this.busses[2]]);
-		this.synths[2] = Synth.after(this.synths[1], "Route", [\in, this.busses[2], \out, this.busses[3]]);
+		// Create chain using busses in -> bus[0] -> bus[1] -> bus[2] -> bus[3] -> out
+		this.synths = [0, 0];
+		this.synths[0] = Synth.new("Route", [\in, inputBus, \out, this.busses[0]], this.group);
+		this.synths[1] = Synth.tail(this.group, "Route", [\in, this.busses[3], \out, outputBus]);
+
+		this.chains[0].init(this.busses[0], this.busses[1], this.knobs);
+		// Off creates a route between local in and out busses of chain
+		this.chains[0].off(this.synths[0]);
+
+		this.chains[1].init(this.busses[1], this.busses[2], this.knobs);
+
+		// Send chain 1 the previous chains node
+		this.chains[1].off(this.chains[0].requestNode());
+
+		this.chains[2].init(this.busses[2], this.busses[3], this.knobs);
+
+		// Send chain 2 the previous chains node
+		this.chains[2].off(this.chains[1].requestNode());
+
+
+
 	}
 
 	/******************************************************************
@@ -320,7 +338,7 @@ DAMScene {
 
 
 	/******************************************************************
-	Update Switch
+	Update Switch !!!! DEPRACATED REMOVE AFTER REGRESSION TESTING
 		Toggles individual effects/effect chains
 		Params: state -> 1 (on) or 0 (off)
 		index -> index of the switch [0,1,2]
@@ -382,6 +400,34 @@ DAMScene {
 	}
 
 	/******************************************************************
+	Update Chain
+		Toggles individual effects/effect chains
+	Params: state -> 1 (on) or 0 (off) or 1 (hold)
+			index -> index of the switch [0,1,2]
+	*******************************************************************/
+	updateChain {
+		arg state, index;
+		var node = nil;
+
+		//Verify we have a chain to update
+		if(chains[index] == -1){
+			^-1;
+		};
+
+		// Find the node for the new synth to start after
+		if(index == 0){
+			node = this.synths[0];
+		}{
+			node = this.chains[index - 1].requestNode();
+		};
+
+		// If a node exists, update the state.
+		if(node != nil){
+			this.chains[index].updateState(state, node);
+		};
+	}
+
+	/******************************************************************
 	Set Effect
 		Sets effect to specific index;
 		Params: effect -> name of some synth def
@@ -393,25 +439,287 @@ DAMScene {
 		this.effects[index] = effect;
 	}
 
+
+	setChain {
+		arg chain, index;
+		this.chains[index] = chain;
+	}
+
 	/******************************************************************
 	Kill
 		Frees all resources allocated by trigger. Allows the same scene
 			to be triggered again later without freeing it all.
 	*******************************************************************/
 	kill {
-		// Only get rid of the 2 busses we allocated
-		this.busses[1].free;
-		this.busses[2].free;
+		// Free the chains
+		this.chains.do{
+			arg item, i;
+			if(item){
+				item.free;
+			}
+		}
 
-		// Free all synths
+		// Free the busses
+		this.busses.do{
+			arg item, i;
+			if(item != nil){
+				item.free;
+			}
+		}
+
+		// Free all synths (master in and out routes)
 		this.synths.do{
 			arg item, i;
 			if(item != nil){
 				item.free;
 			};
 		};
+
 		// Get rid of this group
 		this.group.free;
 
+	}
+}
+
+
+
+/*********************************************************************
+DAM Chain
+	Class that controls firing hold and tap behaviors
+*********************************************************************/
+DAMChain{
+
+	// Local in and out busses
+	var <> busIn;
+	var <> busOut;
+
+	// Name of synthdef for hold action
+	var <> holdAction;
+
+	// Name of synthdef for tap actions
+	var <> tapAction;
+
+	// Current state
+	var <> state;
+
+	// Current synth
+	var <> synth;
+
+	// Parameters for each action
+	var <> holdParams;
+	var <> tapParams;
+
+	// Control busses of knob values
+	var <> knobs;
+
+
+	/******************************************************************
+	Pre Build
+		Call to setup defualt values of the chain
+		Params: tapAction -> Name of the synthdef for the tapAction
+				tapParams -> Array of boolean values, each index
+							corresponds to a knob.
+				holdAction -> Name of the synthdef for the tapAction
+				holdParams -> Array of boolean values, each index
+							corresponds to a knob.
+	*******************************************************************/
+	preBuild {
+		arg tapAction = nil, tapParams = [false, false, false, false], holdAction = nil, holdParams = [false, false, false, false];
+
+		// Default all values from parms
+		this.holdAction = holdAction;
+		this.tapAction = tapAction;
+		this.synth = nil;
+		this.holdParams = holdParams;
+		this.tapParams = tapParams;
+	}
+
+	/******************************************************************
+	Init
+		Initializes the signal processing routes
+		Params: busIn -> Local bus in
+				busOut -> Local bus out
+				Knobs -> Array of control busses with knob values
+
+		! Do not call this explicitly, it should only be called from
+		! DAMScene class to handle routing setup
+	*******************************************************************/
+	init {
+		arg busIn, busOut, knobs;
+
+		// Assign member values
+		this.busIn = busIn;
+		this.busOut = busOut;
+		this.knobs = knobs;
+		this.state = 0;
+	}
+
+	/******************************************************************
+	Set Tap
+		Manually set tap action
+		Params: SynthName -> Name of the synthdef for the tapAction
+				Params -> Array of boolean values, each index
+							corresponds to a knob.
+	*******************************************************************/
+	setTap {
+		arg synthName, params = [false, false, false, false];
+		this.tapAction = synthName;
+		this.tapParams = params;
+	}
+
+
+	/******************************************************************
+	Set Hold
+		Manually set hold action
+		Params: SynthName -> Name of the synthdef for the tapAction
+				Params -> Array of boolean values, each index
+							corresponds to a knob.
+	*******************************************************************/
+	setHold {
+		arg synthName, params = [false, false, false, false];
+		this.holdAction = synthName;
+		this.holdParams = params;
+	}
+
+
+	/******************************************************************
+	Update state
+		Alerts the current chain of the new state
+		Params: State -> New state to change to
+							0 -> off
+							1 -> Tap
+							2 -> Hold
+				Node -> the node to spawn the synth after
+
+		! Should only be called by DAMScene
+	*******************************************************************/
+	updateState{
+		arg state, node;
+		// Check that there are actions, if not, this is just a direct out
+		if(this.holdAction == nil && this.tapAction == nil){
+			^0; // Just a direct through chain.
+		};
+
+		// If going from on/hold to off
+		if(this.state >= 1  && state == 0){
+			this.off(node);
+		};
+
+		// If off going to tap
+		if(this.state == 0 && state == 1){
+			this.tap(node);
+		};
+
+		// If off going to tap
+		if(this.state == 0 && state == 2){
+			this.hold(node);
+		}
+
+	}
+
+
+	/******************************************************************
+	Request Node
+		Gets the current synth, should only be used for node tree
+			actions. I.e. dont modify the synth
+		Returns: the current synth node
+	*******************************************************************/
+	requestNode {
+		^this.synth;
+	}
+
+
+	/******************************************************************
+	Off
+		Turns off current synth, then routes the in -> out
+		Params: Node -> Node to spawn the new synth after
+	*******************************************************************/
+	off {
+		arg node;
+		// Set state to 0
+		this.state = 0;
+
+		// Free synth if we should
+		if(this.synth != nil){
+			this.synth.free;
+		};
+
+		// Spawn new route synth after the node
+		this.synth = Synth.after(node, "Route", [\in, this.busIn, \out, this.busOut]);
+	}
+
+	/******************************************************************
+	Tap
+		Turns off current synth, then toggles tap action
+		Params: Node -> Node to spawn the new synth after
+	*******************************************************************/
+	tap {
+		arg node;
+		var i, params;
+
+		// Free synth if we should
+		if(this.synth != nil){
+			this.synth.free;
+		};
+
+		// Verify we have an action
+		if(this.tapAction == nil){
+			^-1;
+		};
+
+		// Start the synth
+		this.synth = Synth.after(node, this.tapAction, [\in, this.busIn, \out, this.busOut]);
+
+		// Map the knobs to the parameters
+		i = 0;
+		params = [\p1, \p2, \p3, \p4];
+		this.tapParams.do{
+			arg elem, index;
+			if(elem){
+				this.synth.map(params[i], this.knobs[index]);
+				i = i + 1;
+			}
+		};
+
+		// Update the state, (if we are this far, we were successful in spawning synth)
+		this.state = 1;
+	}
+
+
+	/******************************************************************
+	Hold
+		Turns off current synth, then starts the hold action
+		Params: Node -> Node to spawn the new synth after
+	*******************************************************************/
+	hold {
+		arg node;
+		var i, params;
+
+		// Free synth if we should
+		if(this.synth != nil){
+			this.synth.free;
+		};
+
+		// Verify there is an action to start
+		if(this.holdAction == nil){
+			^-1;
+		};
+
+		// Start the hold action after the node
+		this.synth = Synth.after(node, holdAction, [\in, this.busIn, \out, this.busOut]);
+
+		// Bind knobs to parameters
+		i = 0;
+		params = [\p1, \p2, \p3, \p4];
+		this.holdParams.do{
+			arg elem, index;
+			if(elem){
+				this.synth.map(params[i], this.knobs[index]);
+				i = i + 1;
+			}
+		};
+
+		// Update the state, we were successful in starting synth
+		this.state = 2;
 	}
 }
