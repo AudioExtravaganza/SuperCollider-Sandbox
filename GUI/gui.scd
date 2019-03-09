@@ -50,8 +50,8 @@ s.waitForBoot({
 	// Setup wav file as input, change to false to disable
 	if(true){
 		// Change this path to point to your WAV file
-		~inputWav = "~/Documents/SC/wavs/guitar_riff.wav".standardizePath.postln ;
-		~wavBus = Bus.audio(s, 2);
+		~inputWav = "~/Desktop/guitar.wav".standardizePath.postln ;
+		~wavBus = Bus.audio(Server.local, 2);
 		~wavBuf = Buffer.read(s, ~inputWav); // remember to free the buffer later.
 		~wavSynth = Synth.new("PlayBuffer", [\buffer, ~wavBuf,  \out, ~wavBus], c.inGroup);
 		c.setInputBus(~wavBus);
