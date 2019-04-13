@@ -1,18 +1,5 @@
 (
 s.options.numBuffers = 2048 * 16;
-	SynthDef.new(\PlayBuffer, {
-		arg buffer = 0, out;
-		var source;
-
-		// Set source to repeat audio from buffer
-		source = PlayBuf.ar(1, buffer, BufRateScale.kr(buffer), loop: 1.0)!2;
-
-		// Output the source to the audio
-		//    bus from args
-		Out.ar(out, source);
-
-}).add; // Add synth to server
-
 
 // Change this to the location that you have cloned to
 ~src = "~/Desktop/SuperCollider-Sandbox/GUI/".standardizePath;
@@ -42,20 +29,7 @@ s.waitForBoot({
 		c.addScene(item.getName(), item);
 	};
 
-
-
-	// Bind all OSC messages
-	c.bindOSC('/Knob 1', 'k', 1);
-	c.bindOSC('/Knob 2', 'k', 2);
-	c.bindOSC('/Knob 3', 'k', 3);
-	c.bindOSC('/Knob 4', 'k', 4);
-
-	c.bindOSC('/Pedal 1', 'p', 1);
-	c.bindOSC('/Pedal 2', 'p', 2);
-	c.bindOSC('/Pedal 3', 'p', 3);
-
-	c.bindOSC('/Menu', 'm');
-
+	// Send all GUI info to the server
 	g.forceOSCUpdate;
 
 	// Setup wav file as input, change to false to disable
