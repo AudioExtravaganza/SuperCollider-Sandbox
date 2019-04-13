@@ -1,18 +1,15 @@
 (
+s.options.numBuffers = 2048 * 16;
+
+~src = thisProcess.nowExecutingPath.dirname;
+
+// Loads all scenes into a list called ~scenes
+(~src ++ "/resources/scenes.scd").load;
+
+// Loads all synthdefs for effects into server
+(~src ++ "/resources/effects.scd").load;
 
 s.waitForBoot({
-
-	// Change this to the location that you have cloned to
-	~src = "~/Desktop/SuperCollider-Sandbox/GUI/".standardizePath;
-
-	// Loads all scenes into a list called ~scenes
-	(~src ++ "/resources/scenes.scd").load;
-
-	// Loads all synthdefs for effects into server
-	(~src ++ "/resources/effects.scd").load;
-
-
-
 	// Debugging on, send data over OSC
 	g = DAMGUI.new();
 	g.build(true, true);
@@ -31,26 +28,13 @@ s.waitForBoot({
 		c.addScene(item.getName(), item);
 	};
 
-
-
-	// Bind all OSC messages
-	c.bindOSC('/Knob 1', 'k', 1);
-	c.bindOSC('/Knob 2', 'k', 2);
-	c.bindOSC('/Knob 3', 'k', 3);
-	c.bindOSC('/Knob 4', 'k', 4);
-
-	c.bindOSC('/Pedal 1', 'p', 1);
-	c.bindOSC('/Pedal 2', 'p', 2);
-	c.bindOSC('/Pedal 3', 'p', 3);
-
-	c.bindOSC('/Menu', 'm');
-
+	// Send all GUI info to the server
 	g.forceOSCUpdate;
 
 	// Setup wav file as input, change to false to disable
 	if(true){
 		// Change this path to point to your WAV file
-		~inputWav = "~/Desktop/guitar.wav".standardizePath.postln ;
+		~inputWav = ~src ++ "/guitar_riff.wav".standardizePath.postln ;
 		~wavBus = Bus.audio(Server.local, 2);
 		~wavBuf = Buffer.read(s, ~inputWav); // remember to free the buffer later.
 		~wavSynth = Synth.new("PlayBuffer", [\buffer, ~wavBuf,  \out, ~wavBus], c.inGroup);
@@ -62,12 +46,3 @@ s.waitForBoot({
 });
 
 )
-
-s.scope;
-
-//Good for debugging
-
-OSCFunc.trace(true, true); // Show OSC messages
-OSCFunc.trace(false); // Stop showing OSC messages
-s.queryAllNodes; // Show all groups and nodes
-

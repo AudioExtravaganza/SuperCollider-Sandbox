@@ -38,6 +38,7 @@ DAMPedalController {
 		this.receivers = Dictionary(0);
 		this.knobs = Array.fill(4, {arg i; Bus.control(parent, 1)});
 		this.scenes = Dictionary(0);
+		this.bindOSC();
 	}
 
 	/******************************************************************
@@ -141,31 +142,29 @@ DAMPedalController {
 					num, index of control (ex pedal 1 -> 1)
 	*******************************************************************/
 	bindOSC {
-		arg name, type, num = 1;
 		// Add the function to the dictionary
-		this.receivers.add(name -> {
+		this.receivers.add("GUI-Reciever" -> {
 			arg msg, time, addr;
-
 			// If this is the right handler
-			if(msg[0] == name){
-				// Switch on the type
-				switch(type,
-					// If knob, update knob bus
-					'k', {this.knobs[num - 1].set(msg[1]);},
 
-					// If pedal, update pedal state
-					'p', {this.updateSwitch(msg[1], num - 1);},
+			// Switch on the type
+			switch(msg[0],
+				// If knob, update knob bus
+				'/knob', {this.knobs[msg[1]].set(msg[2]);},
 
-					// If menu, update menu string
-					'm', {this.updateScene(msg[1]);}
-				);
+				// If pedal, update pedal state
+				'/pedal', {this.updateSwitch(msg[2], msg[1]);},
 
-			};
+				// If menu, update menu string
+				'/menu', {this.updateScene(msg[1]);}
+			);
+
+
 
 		});
 
 		// Add this new function to the OSC receivers
-		thisProcess.addOSCRecvFunc(this.receivers.at(name));
+		thisProcess.addOSCRecvFunc(this.receivers.at("GUI-Reciever"));
 	}
 
 	/******************************************************************
@@ -657,15 +656,17 @@ DAMChain{
 		arg node;
 		var i, params;
 
-		// Free synth if we should
-		if(this.synth != nil){
-			this.synth.free;
-		};
 
 		// Verify we have an action
 		if(this.tapAction == nil){
 			^-1;
 		};
+
+		// Free synth if we should
+		if(this.synth != nil){
+			this.synth.free;
+		};
+
 
 		// Start the synth
 		this.synth = Synth.after(node, this.tapAction, [\in, this.busIn, \out, this.busOut]);
@@ -695,14 +696,16 @@ DAMChain{
 		arg node;
 		var i, params;
 
-		// Free synth if we should
-		if(this.synth != nil){
-			this.synth.free;
-		};
 
 		// Verify there is an action to start
 		if(this.holdAction == nil){
+			"No hold action".postln;
 			^-1;
+		};
+
+		// Free synth if we should
+		if(this.synth != nil){
+			this.synth.free;
 		};
 
 		// Start the hold action after the node

@@ -23,7 +23,8 @@ DAMComponent{
 	var <>component;
 
 	var <>dispatcher;
-
+	var <>id;
+	var <>type;
 	/******************************************************************
 	Build
 		Basic constructor. Must be explicitly called after an instance
@@ -39,7 +40,7 @@ DAMComponent{
 	*******************************************************************/
 	build {
 
-		arg parent = 0, pos = Rect(0,0, 100, 100) , name = "Blank Component";
+		arg parent = 0, pos = Rect(0,0, 100, 100) , name = "Blank Component", id = -1, type = '-';
 
 		// Label Position
 		var lPos = pos.asArray();
@@ -66,6 +67,9 @@ DAMComponent{
 			arg comp;
 			this.runActions(comp);
 		});
+
+		this.id = id;
+		this.type = type;
 	}
 
 	/******************************************************************
@@ -102,7 +106,7 @@ DAMComponent{
 			arg name, val;
 
 			// Send the message name, with the parameter component value
-			this.dispatcher.sendMsg("/" ++ name, this.component.value);
+			this.dispatcher.sendMsg("/" ++ this.type, this.id, this.component.value);
 		});
 
 	}
@@ -177,15 +181,25 @@ DAMKnob : DAMComponent {
 		! If using with DAMDebugger, all names must be unique
 	*******************************************************************/
 	build {
-		arg parent = 0, rect = Rect(0,0, 50, 50), name = "Knob";
+		arg parent = 0, rect = Rect(0,0, 50, 50), name = "Knob", id = -1;
 
 		// Set the component
 		this.component = Knob.new(parent, rect);
 		this.component.valueAction = 0.5;
 
 		// Let the base class build itself
-		super.build(parent, rect, name);
+		super.build(parent, rect, name, id, 'knob');
 	}
+
+	inc{
+		arg pos = true, fast = false, slow = false;
+		var speed = -0.05;
+		if(fast){speed = -0.1};
+		if(slow){speed = -0.01};
+		if(pos){speed = speed * -1};
+		this.component.valueAction = this.component.value + speed;
+	}
+
 }
 
 /*********************************************************************
@@ -204,7 +218,7 @@ DAMMenu : DAMComponent {
 		! If using with DAMDebugger, all names must be unique
 	*******************************************************************/
 	build {
-		arg parent = 0, rect = Rect(0,0, 50, 50), name = "Menu";
+		arg parent = 0, rect = Rect(0,0, 50, 50), name = "Menu", id = -1;
 
 		// Create menu
 		this.component = PopUpMenu(parent, rect);
@@ -216,7 +230,7 @@ DAMMenu : DAMComponent {
 		this.component.items = this.items.asArray();
 
 		// Let the base class build itself
-		super.build(parent, rect, name);
+		super.build(parent, rect, name, id, 'm');
 
 		// Make label invisible
 		this.label.visible = false;
@@ -261,7 +275,7 @@ DAMMenu : DAMComponent {
 			arg name, val;
 
 			// Send the message name, with the parameter menu string
-			this.dispatcher.sendMsg("/" ++ name, this.items.at(this.component.value));
+			this.dispatcher.sendMsg("/menu", this.items.at(this.component.value));
 		});
 
 	}
@@ -327,7 +341,7 @@ DAMPedal : DAMComponent {
 		! If using with DAMDebugger, all names must be unique
 	*******************************************************************/
 	build {
-		arg parent = 0, rect = Rect(0,0, 50, 50), name = "Pedal";
+		arg parent = 0, rect = Rect(0,0, 50, 50), name = "Pedal", id = -1;
 
 		// Build button
 		this.component = Button(parent, rect);
@@ -335,13 +349,33 @@ DAMPedal : DAMComponent {
 		// Set the states to:
 		//	0: Off
 		// 	1: On
-		this.component.states = [["Off", Color.white, Color.red], ["On", Color.black, Color.green]];
+		this.component.states = [["Off", Color.white, Color.red], ["On", Color.black, Color.green], ["Hold", Color.cyan]];
 
 		// Default to off
 		this.component.value = 0;
 
 		// Let the base class build itself
-		super.build(parent, rect, name);
+		super.build(parent, rect, name, id, 'pedal');
+	}
+
+	toggle {
+		arg holding = false, off = false;
+		if(holding){
+			this.component.valueAction = 2;
+			^2;
+		};
+		if(off) {
+			this.component.valueAction = 0;
+			^0;
+		};
+
+		if(this.component.value > 0){
+			this.component.valueAction = 0;
+			^0;
+		};
+
+		this.component.valueAction = 1;
+		^1;
 	}
 
 	/******************************************************************
@@ -561,7 +595,7 @@ DAMGUI {
 		// Build the Knobs with the correct names and positions
 		this.knobs.do{
 			arg item, i;
-			item.build(this.win, Rect(x[i], y[i], 50, 50), ("Knob " ++ (i+1).asDigit));
+			item.build(this.win, Rect(x[i], y[i], 50, 50), ("Knob " ++ (i+1).asDigit), i);
 			if (useOSC){
 				item.bindOSC();
 			};
@@ -577,11 +611,32 @@ DAMGUI {
 		// Build the Pedals with the correct names and positions
 		this.pedals.do{
 			arg item, i;
-			item.build(this.win, Rect(x[i], 450, 50, 50), ("Pedal " ++ (i + 1).asDigit));
+			item.build(this.win, Rect(x[i], 450, 50, 50), ("Pedal " ++ (i + 1).asDigit), i);
 			if (useOSC){
 				item.bindOSC();
 			};
 		};
+
+		this.win.view.keyDownAction = {
+			arg view, char, mod, uni, keycode, key;
+			var hold, off;
+			hold = mod == 131072;
+			off = mod == 262144;
+			case
+				{keycode == 49} {this.pedals[0].toggle(hold, off);}
+				{keycode == 50} {this.pedals[1].toggle(hold, off);}
+				{keycode == 51} {this.pedals[2].toggle(hold, off);}
+				{keycode == 65} {this.knobs.[0].inc(false, hold, off);}
+				{keycode == 83} {this.knobs.[0].inc(true, hold, off);}
+				{keycode == 68} {this.knobs.[1].inc(false, hold, off);}
+				{keycode == 70} {this.knobs.[1].inc(true, hold, off);}
+				{keycode == 71} {this.knobs.[2].inc(false, hold, off);}
+				{keycode == 72} {this.knobs.[2].inc(true, hold, off);}
+				{keycode == 74} {this.knobs.[3].inc(false, hold, off);}
+				{keycode == 75} {this.knobs.[3].inc(true, hold, off);};
+		};
+
+
 
 		// Create and build the menu
 		this.menu = DAMMenu.new();
