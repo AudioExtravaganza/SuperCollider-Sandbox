@@ -150,7 +150,7 @@ DAMPedalController {
 			// Switch on the type
 			switch(msg[0],
 				// If knob, update knob bus
-				'/knob', {this.knobs[msg[1]].set(msg[2]); "set k to".post; msg[1].post; msg[2].posln;},
+				'/knob', {this.knobs[msg[1]].set(msg[2]);},
 
 				// If pedal, update pedal state
 				'/pedal', {this.updateSwitch(msg[2], msg[1]);},
