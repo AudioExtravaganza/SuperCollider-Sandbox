@@ -23,7 +23,8 @@ DAMComponent{
 	var <>component;
 
 	var <>dispatcher;
-
+	var <>id;
+	var <>type;
 	/******************************************************************
 	Build
 		Basic constructor. Must be explicitly called after an instance
@@ -39,7 +40,7 @@ DAMComponent{
 	*******************************************************************/
 	build {
 
-		arg parent = 0, pos = Rect(0,0, 100, 100) , name = "Blank Component";
+		arg parent = 0, pos = Rect(0,0, 100, 100) , name = "Blank Component", id = -1, type = '-';
 
 		// Label Position
 		var lPos = pos.asArray();
@@ -66,6 +67,9 @@ DAMComponent{
 			arg comp;
 			this.runActions(comp);
 		});
+
+		this.id = id;
+		this.type = type;
 	}
 
 	/******************************************************************
@@ -102,7 +106,7 @@ DAMComponent{
 			arg name, val;
 
 			// Send the message name, with the parameter component value
-			this.dispatcher.sendMsg("/" ++ name, this.component.value);
+			this.dispatcher.sendMsg("/" ++ this.type, this.id, this.component.value);
 		});
 
 	}
@@ -177,14 +181,14 @@ DAMKnob : DAMComponent {
 		! If using with DAMDebugger, all names must be unique
 	*******************************************************************/
 	build {
-		arg parent = 0, rect = Rect(0,0, 50, 50), name = "Knob";
+		arg parent = 0, rect = Rect(0,0, 50, 50), name = "Knob", id = -1;
 
 		// Set the component
 		this.component = Knob.new(parent, rect);
 		this.component.valueAction = 0.5;
 
 		// Let the base class build itself
-		super.build(parent, rect, name);
+		super.build(parent, rect, name, id, 'knob');
 	}
 
 	inc{
@@ -214,7 +218,7 @@ DAMMenu : DAMComponent {
 		! If using with DAMDebugger, all names must be unique
 	*******************************************************************/
 	build {
-		arg parent = 0, rect = Rect(0,0, 50, 50), name = "Menu";
+		arg parent = 0, rect = Rect(0,0, 50, 50), name = "Menu", id = -1;
 
 		// Create menu
 		this.component = PopUpMenu(parent, rect);
@@ -226,7 +230,7 @@ DAMMenu : DAMComponent {
 		this.component.items = this.items.asArray();
 
 		// Let the base class build itself
-		super.build(parent, rect, name);
+		super.build(parent, rect, name, id, 'm');
 
 		// Make label invisible
 		this.label.visible = false;
@@ -271,7 +275,7 @@ DAMMenu : DAMComponent {
 			arg name, val;
 
 			// Send the message name, with the parameter menu string
-			this.dispatcher.sendMsg("/" ++ name, this.items.at(this.component.value));
+			this.dispatcher.sendMsg("/menu", this.items.at(this.component.value));
 		});
 
 	}
@@ -337,7 +341,7 @@ DAMPedal : DAMComponent {
 		! If using with DAMDebugger, all names must be unique
 	*******************************************************************/
 	build {
-		arg parent = 0, rect = Rect(0,0, 50, 50), name = "Pedal";
+		arg parent = 0, rect = Rect(0,0, 50, 50), name = "Pedal", id = -1;
 
 		// Build button
 		this.component = Button(parent, rect);
@@ -351,7 +355,7 @@ DAMPedal : DAMComponent {
 		this.component.value = 0;
 
 		// Let the base class build itself
-		super.build(parent, rect, name);
+		super.build(parent, rect, name, id, 'pedal');
 	}
 
 	toggle {
@@ -591,7 +595,7 @@ DAMGUI {
 		// Build the Knobs with the correct names and positions
 		this.knobs.do{
 			arg item, i;
-			item.build(this.win, Rect(x[i], y[i], 50, 50), ("Knob " ++ (i+1).asDigit));
+			item.build(this.win, Rect(x[i], y[i], 50, 50), ("Knob " ++ (i+1).asDigit), i);
 			if (useOSC){
 				item.bindOSC();
 			};
@@ -607,7 +611,7 @@ DAMGUI {
 		// Build the Pedals with the correct names and positions
 		this.pedals.do{
 			arg item, i;
-			item.build(this.win, Rect(x[i], 450, 50, 50), ("Pedal " ++ (i + 1).asDigit));
+			item.build(this.win, Rect(x[i], 450, 50, 50), ("Pedal " ++ (i + 1).asDigit), i);
 			if (useOSC){
 				item.bindOSC();
 			};
