@@ -1,8 +1,7 @@
 (
 s.options.numBuffers = 2048 * 16;
 
-// Change this to the location that you have cloned to
-~src = "~/Desktop/SuperCollider-Sandbox/GUI/".standardizePath;
+~src = thisProcess.nowExecutingPath.dirname;
 
 // Loads all scenes into a list called ~scenes
 (~src ++ "/resources/scenes.scd").load;
@@ -35,7 +34,7 @@ s.waitForBoot({
 	// Setup wav file as input, change to false to disable
 	if(true){
 		// Change this path to point to your WAV file
-		~inputWav = "~/Desktop/guitar_riff.wav".standardizePath.postln ;
+		~inputWav = ~src ++ "/guitar_riff.wav".standardizePath.postln ;
 		~wavBus = Bus.audio(Server.local, 2);
 		~wavBuf = Buffer.read(s, ~inputWav); // remember to free the buffer later.
 		~wavSynth = Synth.new("PlayBuffer", [\buffer, ~wavBuf,  \out, ~wavBus], c.inGroup);
