@@ -1,18 +1,29 @@
 (
+s.options.numBuffers = 2048 * 16;
+	SynthDef.new(\PlayBuffer, {
+		arg buffer = 0, out;
+		var source;
+
+		// Set source to repeat audio from buffer
+		source = PlayBuf.ar(1, buffer, BufRateScale.kr(buffer), loop: 1.0)!2;
+
+		// Output the source to the audio
+		//    bus from args
+		Out.ar(out, source);
+
+}).add; // Add synth to server
+
+
+// Change this to the location that you have cloned to
+~src = "~/Desktop/SuperCollider-Sandbox/GUI/".standardizePath;
+
+// Loads all scenes into a list called ~scenes
+(~src ++ "/resources/scenes.scd").load;
+
+// Loads all synthdefs for effects into server
+(~src ++ "/resources/effects.scd").load;
 
 s.waitForBoot({
-
-	// Change this to the location that you have cloned to
-	~src = "~/Desktop/SuperCollider-Sandbox/GUI/".standardizePath;
-
-	// Loads all scenes into a list called ~scenes
-	(~src ++ "/resources/scenes.scd").load;
-
-	// Loads all synthdefs for effects into server
-	(~src ++ "/resources/effects.scd").load;
-
-
-
 	// Debugging on, send data over OSC
 	g = DAMGUI.new();
 	g.build(true, true);
@@ -50,7 +61,7 @@ s.waitForBoot({
 	// Setup wav file as input, change to false to disable
 	if(true){
 		// Change this path to point to your WAV file
-		~inputWav = "~/Desktop/guitar.wav".standardizePath.postln ;
+		~inputWav = "~/Desktop/guitar_riff.wav".standardizePath.postln ;
 		~wavBus = Bus.audio(Server.local, 2);
 		~wavBuf = Buffer.read(s, ~inputWav); // remember to free the buffer later.
 		~wavSynth = Synth.new("PlayBuffer", [\buffer, ~wavBuf,  \out, ~wavBus], c.inGroup);
@@ -62,12 +73,3 @@ s.waitForBoot({
 });
 
 )
-
-s.scope;
-
-//Good for debugging
-
-OSCFunc.trace(true, true); // Show OSC messages
-OSCFunc.trace(false); // Stop showing OSC messages
-s.queryAllNodes; // Show all groups and nodes
-
