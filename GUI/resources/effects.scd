@@ -1,3 +1,16 @@
+SynthDef.new(\PlayBuffer, {
+		arg buffer = 0, out;
+		var source;
+
+		// Set source to repeat audio from buffer
+		source = PlayBuf.ar(1, buffer, BufRateScale.kr(buffer), loop: 1.0)!2;
+
+		// Output the source to the audio
+		//    bus from args
+		Out.ar(out, source);
+
+}).add; // Add synth to server
+
 
 
 // This synth def is required by DAMScenes
@@ -30,19 +43,6 @@ SynthDef("PulseSig", {
 	Out.ar(out, signal);
 }).add;
 
-
-SynthDef.new('PlayBuffer', {
-	arg buffer = 0, out;
-	var source;
-
-	// Set source to repeat audio from buffer
-	source = PlayBuf.ar(1, buffer, BufRateScale.kr(buffer), loop: 1.0)!2;
-
-	// Output the source to the audio
-	//    bus from args
-	Out.ar(out, source);
-
-}).add; // Add synth to server
 
 
 SynthDef.new('Distort', {
