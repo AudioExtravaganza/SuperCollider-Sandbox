@@ -186,6 +186,16 @@ DAMKnob : DAMComponent {
 		// Let the base class build itself
 		super.build(parent, rect, name);
 	}
+
+	inc{
+		arg pos = true, fast = false, slow = false;
+		var speed = -0.05;
+		if(fast){speed = -0.1};
+		if(slow){speed = -0.01};
+		if(pos){speed = speed * -1};
+		this.component.valueAction = this.component.value + speed;
+	}
+
 }
 
 /*********************************************************************
@@ -335,13 +345,33 @@ DAMPedal : DAMComponent {
 		// Set the states to:
 		//	0: Off
 		// 	1: On
-		this.component.states = [["Off", Color.white, Color.red], ["On", Color.black, Color.green]];
+		this.component.states = [["Off", Color.white, Color.red], ["On", Color.black, Color.green], ["Hold", Color.cyan]];
 
 		// Default to off
 		this.component.value = 0;
 
 		// Let the base class build itself
 		super.build(parent, rect, name);
+	}
+
+	toggle {
+		arg holding = false, off = false;
+		if(holding){
+			this.component.valueAction = 2;
+			^2;
+		};
+		if(off) {
+			this.component.valueAction = 0;
+			^0;
+		};
+
+		if(this.component.value > 0){
+			this.component.valueAction = 0;
+			^0;
+		};
+
+		this.component.valueAction = 1;
+		^1;
 	}
 
 	/******************************************************************
@@ -582,6 +612,27 @@ DAMGUI {
 				item.bindOSC();
 			};
 		};
+
+		this.win.view.keyDownAction = {
+			arg view, char, mod, uni, keycode, key;
+			var hold, off;
+			hold = mod == 131072;
+			off = mod == 262144;
+			case
+				{keycode == 49} {this.pedals[0].toggle(hold, off);}
+				{keycode == 50} {this.pedals[1].toggle(hold, off);}
+				{keycode == 51} {this.pedals[2].toggle(hold, off);}
+				{keycode == 65} {this.knobs.[0].inc(false, hold, off);}
+				{keycode == 83} {this.knobs.[0].inc(true, hold, off);}
+				{keycode == 68} {this.knobs.[1].inc(false, hold, off);}
+				{keycode == 70} {this.knobs.[1].inc(true, hold, off);}
+				{keycode == 71} {this.knobs.[2].inc(false, hold, off);}
+				{keycode == 72} {this.knobs.[2].inc(true, hold, off);}
+				{keycode == 74} {this.knobs.[3].inc(false, hold, off);}
+				{keycode == 75} {this.knobs.[3].inc(true, hold, off);};
+		};
+
+
 
 		// Create and build the menu
 		this.menu = DAMMenu.new();
