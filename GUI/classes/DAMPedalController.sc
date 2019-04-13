@@ -657,15 +657,17 @@ DAMChain{
 		arg node;
 		var i, params;
 
-		// Free synth if we should
-		if(this.synth != nil){
-			this.synth.free;
-		};
 
 		// Verify we have an action
 		if(this.tapAction == nil){
 			^-1;
 		};
+
+		// Free synth if we should
+		if(this.synth != nil){
+			this.synth.free;
+		};
+
 
 		// Start the synth
 		this.synth = Synth.after(node, this.tapAction, [\in, this.busIn, \out, this.busOut]);
@@ -695,14 +697,16 @@ DAMChain{
 		arg node;
 		var i, params;
 
-		// Free synth if we should
-		if(this.synth != nil){
-			this.synth.free;
-		};
 
 		// Verify there is an action to start
 		if(this.holdAction == nil){
+			"No hold action".postln;
 			^-1;
+		};
+
+		// Free synth if we should
+		if(this.synth != nil){
+			this.synth.free;
 		};
 
 		// Start the hold action after the node
