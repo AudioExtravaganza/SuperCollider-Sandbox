@@ -236,6 +236,19 @@ DAMMenu : DAMComponent {
 		this.label.visible = false;
 	}
 
+	left {
+		var v = this.component.value;
+
+		if(v > 0){
+			this.component.valueAction = v - 1;
+		};
+	}
+	right {
+		var v = this.component.value;
+		if(v < (this.items.size - 1)){
+			this.component.valueAction = v + 1;
+		};
+	}
 	/******************************************************************
 	Run Actions
 		Override run actions from base class
@@ -633,7 +646,10 @@ DAMGUI {
 				{keycode == 71} {this.knobs.[2].inc(false, hold, off);}
 				{keycode == 72} {this.knobs.[2].inc(true, hold, off);}
 				{keycode == 74} {this.knobs.[3].inc(false, hold, off);}
-				{keycode == 75} {this.knobs.[3].inc(true, hold, off);};
+				{keycode == 75} {this.knobs.[3].inc(true, hold, off);}
+				{keycode == 188} {this.menu.left()}
+				{keycode == 190} {this.menu.right()}
+			;
 		};
 
 
