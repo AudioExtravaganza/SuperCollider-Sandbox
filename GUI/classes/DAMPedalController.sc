@@ -453,8 +453,10 @@ DAMScene {
 		// Free the chains
 		this.chains.do{
 			arg item, i;
-			if(item){
-				item.free;
+			if(item != nil
+
+			){
+				item.free();
 			}
 		};
 
@@ -744,14 +746,14 @@ DAM Looper
 *********************************************************************/
 DAMLooper : DAMChain {
 
-	const max_loop = 30; // Maximum loop length in seconds
-	const channels = 2;
+	var <>max_loop = 30; // Maximum loop length in seconds
+	var <>channels = 2;
 
-	var max_samples;
-	var clockBus;
-	var buffer;
-	var loopLen, loopSamples;
-	var recSynth, playSynth;
+	var <>max_samples;
+	var <>clockBus;
+	var <>buffer;
+	var <>loopLen, <>loopSamples;
+	var <>recSynth, <>playSynth;
 
 	// Initialize looper class
 	init{
@@ -791,7 +793,7 @@ DAMLooper : DAMChain {
 			Out.kr(clockBus, Phasor.kr(0, 1.0, 0.0, loopSamples, 0.0));
 
 			// Send the contents of the buffer to output
-			Out.ar(outBus, PlayBuf.ar(DAMLooper.channels, buffer, loop:1));
+			Out.ar(outBus, PlayBuf.ar(2, buffer, loop:1));
 		}).send;
 
 		"Finished initializing looper".postln;
@@ -804,7 +806,7 @@ DAMLooper : DAMChain {
 
 		// Create the recording synth
 		this.recSynth = Synth(\recLoop, [
-			inBus: this.inBus,
+			inBus: this.busIn,
 			clockBus: this.clockBus,
 			buffer: this.buffer,
 			loopSamples: max_samples
@@ -840,7 +842,7 @@ DAMLooper : DAMChain {
 	dubLoop{
 		if( this.recSynth.isNil ) {
 			this.recSynth = Synth( \recLoop, [
-				inBus: this.inBus,
+				inBus: this.busOut,
 				clockBus: this.clockBus,
 				buffer: this.buffer,
 				loopSamples: this.loopSamples
@@ -859,7 +861,7 @@ DAMLooper : DAMChain {
 	playLoop{
 		if( this.playSynth.isNil ){
 			this.playSynth = Synth( \playLoop, [
-				outBus: this.outBus,
+				outBus: this.busOut,
 				clockBus: this.clockBus,
 				buffer: this.buffer,
 				loopSamples: this.loopSamples
@@ -896,10 +898,10 @@ DAMLooper : DAMChain {
 			}{
 			// Otherwise overdub
 				this.dubLoop;
-			}
+			};
 
 			this.state = 2;
-		}
+		};
 
 		// On tap
 		if( state == 1 ) {
@@ -907,7 +909,7 @@ DAMLooper : DAMChain {
 			this.playLoop;
 
 			this.state = 1;
-		}
+		};
 
 		// On release
 		if( state == 0 ) {
@@ -916,15 +918,15 @@ DAMLooper : DAMChain {
 			if( this.state == 2 ) {
 				// Stop recording
 				this.stopRec;
-			}
+			};
 			// If we're playing
 			if( this.state == 1 ) {
 				// Stop playing
 				this.stopLoop;
-			}
+			};
 
 			this.state = 0;
-		}
+		};
 		"Update state override working".postln;
 
 	}

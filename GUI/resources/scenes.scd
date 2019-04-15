@@ -18,3 +18,11 @@
 
 
 ~scenes.add(~temp);
+
+~temp = DAMScene.new();
+~temp.prebuild('Looper');
+~tempChain = DAMLooper.new();
+~temp.setChain(~tempChain, 0);
+
+
+~scenes.add(~temp);

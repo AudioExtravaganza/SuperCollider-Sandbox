@@ -44,7 +44,6 @@ SynthDef("PulseSig", {
 }).add;
 
 
-
 SynthDef.new('Distort', {
 	arg in, out, p1, p2, p3, p4;
 	var signal;
