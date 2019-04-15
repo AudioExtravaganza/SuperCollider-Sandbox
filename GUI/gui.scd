@@ -46,4 +46,3 @@ s.waitForBoot({
 	g.addCloseAction({c.free; s.quit;});
 });
 )
-s.scope;
