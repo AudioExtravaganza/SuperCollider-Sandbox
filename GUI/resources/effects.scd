@@ -44,7 +44,6 @@ SynthDef("PulseSig", {
 }).add;
 
 
-
 SynthDef.new('Distort', {
 	arg in, out, p1, p2, p3, p4;
 	var signal;
@@ -64,4 +63,37 @@ SynthDef.new('DAMLPF', {
 	signal = LPF.ar(signal, freq, 1, 0);
 	Out.ar(out, signal);
 
+}).add;
+
+
+
+SynthDef( \recLoop, {
+	arg inBus = 0, clockBus = 0, gate = 1, buffer, loopSamples;
+
+	var inSignal;
+	var timer = Line.kr(0, loopSamples, loopSamples);
+	var trigGate = 1 - (gate + Done.kr(timer));
+
+	// the signal to be recorded
+	inSignal = In.ar(inBus, 2);
+
+	// send time used for recording back to language
+	SendTrig.kr(trigGate, 0, timer);
+
+			// release synth when recGate closes
+	FreeSelf.kr(trigGate);
+
+	// record input signal
+	RecordBuf.ar(inSignal, buffer, In.kr(clockBus), recLevel: 1, preLevel: 1);
+
+}).add;
+
+SynthDef( \playLoop, {
+	arg outBus, clockBus, buffer, loopSamples;
+
+	// Index the buffer using Phasor
+	Out.kr(clockBus, Phasor.kr(0, 1.0, 0.0, loopSamples, 0.0));
+
+	// Send the contents of the buffer to output
+	Out.ar(outBus, PlayBuf.ar(2, buffer, loop:1));
 }).add;

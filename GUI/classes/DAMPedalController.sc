@@ -453,8 +453,10 @@ DAMScene {
 		// Free the chains
 		this.chains.do{
 			arg item, i;
-			if(item){
-				item.free;
+			if(item != nil
+
+			){
+				item.free();
 			}
 		};
 
@@ -734,5 +736,171 @@ DAMChain{
 		if(this.synth != nil){
 			this.synth.free;
 		}
+	}
+}
+
+
+/*********************************************************************
+DAM Looper
+	Class that controls firing hold and tap behaviors
+*********************************************************************/
+DAMLooper : DAMChain {
+
+	var <>max_loop = 30; // Maximum loop length in seconds
+	var <>channels = 2;
+
+	var <>max_samples;
+	var <>clockBus;
+	var <>buffer;
+	var <>loopLen, <>loopSamples;
+	var <>recSynth, <>playSynth;
+
+	// Initialize looper class
+	init{
+		arg busIn, busOut, knobs = [];
+
+		this.busIn = busIn;
+		this.busOut = busOut;
+
+		this.clockBus = Bus.control();
+
+		this.max_samples = max_loop * Server.local.sampleRate;
+
+		"Finished initializing looper".postln;
+	}
+
+	// Create a new loop
+	newLoop{
+		arg node;
+		// Set the initial buffer
+		this.buffer = Buffer.new(Server.local, max_samples, channels);
+		"Recoding".postln;
+		// Create the recording synth
+		this.recSynth = Synth.after(node, \recLoop, [
+			inBus: this.busIn,
+			clockBus: this.clockBus,
+			buffer: this.buffer,
+			loopSamples: max_samples
+		]);
+
+		// Handle the synth finishing
+		OSCFunc({ | msg, time |
+			var tempBuf;
+
+			// Get the amount of time recorded
+			this.loopLen = msg[3];
+			// Convert recorded time to frames
+			this.loopSamples = (this.loopLen * Server.local.sampleRate).trunc;
+
+			// Copy the recorded frames into a buffer of the right length
+			tempBuf = Buffer.alloc(Server.local, this.loopSamples, channels, {
+				arg buf;
+				this.buffer.copyMsg(buf, 0, 0, this.loopSamples);
+			});
+
+			// Free the current buffer
+			this.buffer.free;
+
+			// Replace with the newly copied buffer
+			this.buffer = tempBuf;
+			// Start playback
+			this.playLoop(node);
+		},'/tr', Server.local.addr, nil, [this.recSynth.nodeID, 0]).oneShot;
+	}
+
+	// Overdub an existing loop
+	dubLoop{
+		arg node;
+		if( this.recSynth.isNil ) {
+			this.recSynth = Synth.after(node, \recLoop, [
+				inBus: this.busOut,
+				clockBus: this.clockBus,
+				buffer: this.buffer,
+				loopSamples: this.loopSamples
+			]);
+		}
+	}
+
+	// Stop a currently running record
+	stopRec{
+		if( this.recSynth.notNil ){
+			this.recSynth.set(\gate, 0);
+		}
+	}
+
+	// Start playback on a loop
+	playLoop{
+		arg node;
+		if( this.playSynth.isNil ){
+			this.buffer.postln;
+			this.playSynth = Synth.after(node, \playLoop, [
+				outBus: this.busOut,
+				clockBus: this.clockBus,
+				buffer: this.buffer,
+				loopSamples: this.loopSamples
+			]);
+		}
+	}
+
+	// Stop loop playback
+	stopLoop{
+		if( this.playSynth.notNil ){
+			this.playSynth.free;
+		}
+	}
+
+	/******************************************************************
+	Update state
+		Alerts the current chain of the new state
+		Params: State -> New state to change to
+							0 -> off
+							1 -> Tap
+							2 -> Hold
+				Node -> the node to spawn the synth after
+
+		! Should only be called by DAMScene
+	*******************************************************************/
+	updateState{
+		arg state, node;
+		state.postln;
+		// On hold
+		if( state == 2 ) {
+			// Start a new loop if none exists
+			if( this.playSynth.isNil ){
+				this.newLoop(node);
+			}{
+			// Otherwise overdub
+				this.dubLoop(node);
+			};
+
+			this.state = 2;
+		};
+
+		// On tap
+		if( state == 1 ) {
+			// Play the loop
+			this.playLoop(node);
+
+			this.state = 1;
+		};
+
+		// On release
+		if( state == 0 ) {
+
+			// If we're recording
+			if( this.state == 2 ) {
+				// Stop recording
+				this.stopRec(node);
+			};
+			// If we're playing
+			if( this.state == 1 ) {
+				// Stop playing
+				this.stopLoop(node);
+			};
+
+			this.state = 0;
+		};
+		"Update state override working".postln;
+
 	}
 }
