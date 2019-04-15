@@ -1,5 +1,5 @@
 (
-s.options.numBuffers = 2048 * 16;
+Server.default.options.numBuffers = 2048 * 32;
 
 ~src = thisProcess.nowExecutingPath.dirname;
 
@@ -9,10 +9,11 @@ s.options.numBuffers = 2048 * 16;
 // Loads all synthdefs for effects into server
 (~src ++ "/resources/effects.scd").load;
 
+
 s.waitForBoot({
 	// Debugging on, send data over OSC
 	g = DAMGUI.new();
-	g.build(true, true);
+	g.build(false, true);
 
 	// Setup the server
 	c = DAMPedalController.new();
@@ -44,5 +45,5 @@ s.waitForBoot({
 	// Free the controller, then stop the server.
 	g.addCloseAction({c.free; s.quit;});
 });
-
 )
+s.scope;
