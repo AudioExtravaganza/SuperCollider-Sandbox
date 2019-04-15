@@ -766,51 +766,22 @@ DAMLooper : DAMChain {
 
 		this.max_samples = max_loop * Server.local.sampleRate;
 
-		SynthDef( \recLoop, {
-			arg inBus = 0, clockBus = 0, gate = 1, buffer, loopSamples;
-
-			var inSignal;
-			var timer = Line.kr(0, loopSamples, loopSamples);
-			var trigGate = 1 - (gate + Done.kr(timer));
-
-			// the signal to be recorded
-			inSignal = In.ar(inBus, channels);
-
-			// send time used for recording back to language
-			SendTrig.kr(trigGate, 0, timer);
-
-			// release synth when recGate closes
-			FreeSelf.kr(trigGate);
-
-			// record input signal
-			RecordBuf.ar(inSignal, buffer, In.kr(clockBus), recLevel: 1, preLevel: 1);
-		}).send;
-
-		SynthDef( \playLoop, {
-			arg outBus, clockBus, buffer, loopSamples;
-
-			// Index the buffer using Phasor
-			Out.kr(clockBus, Phasor.kr(0, 1.0, 0.0, loopSamples, 0.0));
-
-			// Send the contents of the buffer to output
-			Out.ar(outBus, PlayBuf.ar(2, buffer, loop:1));
-		}).send;
-
 		"Finished initializing looper".postln;
 	}
 
 	// Create a new loop
 	newLoop{
+		arg node;
 		// Set the initial buffer
 		this.buffer = Buffer.new(Server.local, max_samples, channels);
-
+		"Recoding".postln;
 		// Create the recording synth
-		this.recSynth = Synth(\recLoop, [
+		this.recSynth = Synth.after(node, \recLoop, [
 			inBus: this.busIn,
 			clockBus: this.clockBus,
 			buffer: this.buffer,
 			loopSamples: max_samples
-		], 0);
+		]);
 
 		// Handle the synth finishing
 		OSCFunc({ | msg, time |
@@ -832,21 +803,21 @@ DAMLooper : DAMChain {
 
 			// Replace with the newly copied buffer
 			this.buffer = tempBuf;
-
 			// Start playback
-			this.playLoop;
+			this.playLoop(node);
 		},'/tr', Server.local.addr, nil, [this.recSynth.nodeID, 0]).oneShot;
 	}
 
 	// Overdub an existing loop
 	dubLoop{
+		arg node;
 		if( this.recSynth.isNil ) {
-			this.recSynth = Synth( \recLoop, [
+			this.recSynth = Synth.after(node, \recLoop, [
 				inBus: this.busOut,
 				clockBus: this.clockBus,
 				buffer: this.buffer,
 				loopSamples: this.loopSamples
-			], 0);
+			]);
 		}
 	}
 
@@ -859,13 +830,15 @@ DAMLooper : DAMChain {
 
 	// Start playback on a loop
 	playLoop{
+		arg node;
 		if( this.playSynth.isNil ){
-			this.playSynth = Synth( \playLoop, [
+			this.buffer.postln;
+			this.playSynth = Synth.after(node, \playLoop, [
 				outBus: this.busOut,
 				clockBus: this.clockBus,
 				buffer: this.buffer,
 				loopSamples: this.loopSamples
-			], 0);
+			]);
 		}
 	}
 
@@ -889,15 +862,15 @@ DAMLooper : DAMChain {
 	*******************************************************************/
 	updateState{
 		arg state, node;
-
+		state.postln;
 		// On hold
 		if( state == 2 ) {
 			// Start a new loop if none exists
 			if( this.playSynth.isNil ){
-				this.newLoop;
+				this.newLoop(node);
 			}{
 			// Otherwise overdub
-				this.dubLoop;
+				this.dubLoop(node);
 			};
 
 			this.state = 2;
@@ -906,7 +879,7 @@ DAMLooper : DAMChain {
 		// On tap
 		if( state == 1 ) {
 			// Play the loop
-			this.playLoop;
+			this.playLoop(node);
 
 			this.state = 1;
 		};
@@ -917,12 +890,12 @@ DAMLooper : DAMChain {
 			// If we're recording
 			if( this.state == 2 ) {
 				// Stop recording
-				this.stopRec;
+				this.stopRec(node);
 			};
 			// If we're playing
 			if( this.state == 1 ) {
 				// Stop playing
-				this.stopLoop;
+				this.stopLoop(node);
 			};
 
 			this.state = 0;
