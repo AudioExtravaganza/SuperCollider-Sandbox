@@ -43,8 +43,8 @@ The DAM GUI is a virtual implementation of the DAM Good Pedal.
   **k** | Increases knob 4.
   **shift-[a\|s\|d\|f\|g\|h\|j\|k]** | Quickly modify knob.
   **ctrl-[a\|s\|d\|f\|g\|h\|j\|k]** | Slowly modify knob.
-  **<** | Navigate menu left.
-  **>** | Navigate menu right.
+  **,** | Navigate menu left.
+  **.** | Navigate menu right.
 
 ## Scenes
   ### Reverb \| Distort \| Filter
