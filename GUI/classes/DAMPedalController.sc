@@ -766,11 +766,12 @@ DAMLooper : DAMChain {
 	// Create a new loop
 	newLoop{
 		arg node;
+		var toFree;
 		// Set the initial buffer
 		this.buffer = Buffer.new(Server.local, max_samples, channels);
-		"Recoding".postln;
+
 		// Create the recording synth
-		this.recSynth = Synth.after(node, \recLoop, [
+		this.recSynth = Synth.new(\recLoop, [
 			inBus: this.busIn,
 			clockBus: this.clockBus,
 			buffer: this.buffer,
@@ -790,23 +791,25 @@ DAMLooper : DAMChain {
 			tempBuf = Buffer.alloc(Server.local, this.loopSamples, channels, {
 				arg buf;
 				this.buffer.copyMsg(buf, 0, 0, this.loopSamples);
+
+
+				// Free the current buffer
+				toFree = this.buffer;
+				// Replace with the newly copied buffer
+				this.buffer = tempBuf;
+				// Start playback
+				this.playLoop(node);
 			});
-
-			// Free the current buffer
-			this.buffer.free;
-
-			// Replace with the newly copied buffer
-			this.buffer = tempBuf;
-			// Start playback
-			this.playLoop(node);
+			toFree.free;
 		},'/tr', Server.local.addr, nil, [this.recSynth.nodeID, 0]).oneShot;
+
 	}
 
 	// Overdub an existing loop
 	dubLoop{
 		arg node;
 		if( this.recSynth.isNil ) {
-			this.recSynth = Synth.after(node, \recLoop, [
+			this.recSynth = Synth.new(\recLoop, [
 				inBus: this.busOut,
 				clockBus: this.clockBus,
 				buffer: this.buffer,
@@ -825,7 +828,7 @@ DAMLooper : DAMChain {
 	// Start playback on a loop
 	playLoop{
 		arg node;
-		if( this.playSynth.isNil ){
+		if( this.playSynth.isNil){
 			this.buffer.postln;
 			this.playSynth = Synth.after(node, \playLoop, [
 				outBus: this.busOut,
@@ -840,6 +843,7 @@ DAMLooper : DAMChain {
 	stopLoop{
 		if( this.playSynth.notNil ){
 			this.playSynth.free;
+			this.playSynth = nil;
 		}
 	}
 

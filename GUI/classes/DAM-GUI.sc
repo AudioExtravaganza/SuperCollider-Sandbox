@@ -373,6 +373,7 @@ DAMPedal : DAMComponent {
 
 	toggle {
 		arg holding = false, off = false;
+
 		if(holding){
 			this.component.valueAction = 2;
 			^2;
