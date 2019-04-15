@@ -798,7 +798,7 @@ DAMLooper : DAMChain {
 				// Replace with the newly copied buffer
 				this.buffer = tempBuf;
 				// Start playback
-				this.playLoop(node);
+				// this.playLoop(node);
 			});
 			toFree.free;
 		},'/tr', Server.local.addr, nil, [this.recSynth.nodeID, 0]).oneShot;
