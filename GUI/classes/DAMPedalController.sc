@@ -119,7 +119,8 @@ DAMPedalController {
 				^-1;
 			}{
 				// Otherwise, kill it (frees things that are allocated)
-				//	 when scene is triggered
+				//	 when scene is triggered'
+
 				this.currentScene.kill;
 
 			};
@@ -453,13 +454,10 @@ DAMScene {
 		// Free the chains
 		this.chains.do{
 			arg item, i;
-			if(item != nil
-
-			){
-				item.free();
+			if(item != nil){
+				item.kill;
 			}
 		};
-
 		// Free the busses
 		this.busses.do{
 			arg item, i;
@@ -469,12 +467,8 @@ DAMScene {
 		};
 
 		// Free all synths (master in and out routes)
-		this.synths.do{
-			arg item, i;
-			if(item != nil){
-				item.free;
-			};
-		};
+		this.synths[0].free;
+		this.synths[1].free;
 
 		// Get rid of this group
 		this.group.free;
@@ -672,7 +666,6 @@ DAMChain{
 
 		// Start the synth
 		this.synth = Synth.after(node, this.tapAction, [\in, this.busIn, \out, this.busOut]);
-
 		// Map the knobs to the parameters
 		i = 0;
 		params = [\p1, \p2, \p3, \p4];
@@ -707,12 +700,12 @@ DAMChain{
 
 		// Free synth if we should
 		if(this.synth != nil){
+
 			this.synth.free;
 		};
 
 		// Start the hold action after the node
 		this.synth = Synth.after(node, holdAction, [\in, this.busIn, \out, this.busOut]);
-
 		// Bind knobs to parameters
 		i = 0;
 		params = [\p1, \p2, \p3, \p4];
@@ -732,9 +725,10 @@ DAMChain{
 	Free
 		Frees local synth
 	*******************************************************************/
-	free{
+	kill{
 		if(this.synth != nil){
 			this.synth.free;
+			this.synth = nil;
 		}
 	}
 }
