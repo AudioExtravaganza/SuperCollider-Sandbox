@@ -81,7 +81,7 @@ SynthDef( \recLoop, {
 	// send time used for recording back to language
 	SendTrig.kr(trigGate, 0, timer);
 
-			// release synth when recGate closes
+	// release synth when recGate closes
 	FreeSelf.kr(trigGate);
 
 	// record input signal
@@ -91,12 +91,12 @@ SynthDef( \recLoop, {
 
 SynthDef( \playLoop, {
 	arg outBus, clockBus, buffer, loopSamples;
-
+	var signal = PlayBuf.ar(2, buffer, loop:1);
 	// Index the buffer using Phasor
 	Out.kr(clockBus, Phasor.kr(0, 1.0, 0.0, loopSamples, 0.0));
 
 	// Send the contents of the buffer to output
-	Out.ar(outBus, PlayBuf.ar(2, buffer, loop:1));
+	Out.ar(outBus, signal);
 }).add;
 
 
