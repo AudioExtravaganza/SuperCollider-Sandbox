@@ -654,9 +654,9 @@ DAMGUI {
 				{keycode == 75  } {this.knobs.[3].inc(true, hold, off);}
 				{keycode == 188 } {this.menu.left()}
 				{keycode == 190 } {this.menu.right()}
-				{keycode == 18} {this.pedals[0].toggle(holdM, off);}
-				{keycode == 19} {this.pedals[1].toggle(holdM, off);}
-				{keycode == 20} {this.pedals[2].toggle(holdM, off);}
+				{keycode == 18} {this.pedals[0].toggle(holdM, offM);}
+				{keycode == 19} {this.pedals[1].toggle(holdM, offM);}
+				{keycode == 20} {this.pedals[2].toggle(holdM, offM);}
 				{keycode == 0 } {this.knobs.[0].inc(false, holdM, offM);}
 				{keycode == 1 } {this.knobs.[0].inc(true, holdM, offM);}
 				{keycode == 2 } {this.knobs.[1].inc(false, holdM, offM);}
