@@ -16,7 +16,6 @@
     "plugins": [
         "Overdrive01",
         "DirectOut",
-        "AnalogEcho",
         "BitCrusher"
     ]
 }
