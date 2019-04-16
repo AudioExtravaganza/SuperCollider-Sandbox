@@ -634,24 +634,24 @@ DAMGUI {
 		this.win.view.keyDownAction = {
 			arg view, char, mod, uni, keycode, key;
 			var hold, off;
-			hold = (mod == 131072 || mod == 148576);
+			hold = (mod == 131072 || mod == 1048576);
 			off = (mod == 262144 || mod == 131072);
-			keycode.postln;
-			mod.postln;
+			// keycode.postln;
+			// mod.postln;
 			case
-				{keycode == 49 || keycode == 18} {this.pedals[0].toggle(hold, off);}
-				{keycode == 50 || keycode == 19} {this.pedals[1].toggle(hold, off);}
-				{keycode == 51 || keycode == 20} {this.pedals[2].toggle(hold, off);}
-				{keycode == 65} {this.knobs.[0].inc(false, hold, off);}
-				{keycode == 83} {this.knobs.[0].inc(true, hold, off);}
-				{keycode == 68} {this.knobs.[1].inc(false, hold, off);}
-				{keycode == 70} {this.knobs.[1].inc(true, hold, off);}
-				{keycode == 71} {this.knobs.[2].inc(false, hold, off);}
-				{keycode == 72} {this.knobs.[2].inc(true, hold, off);}
-				{keycode == 74} {this.knobs.[3].inc(false, hold, off);}
-				{keycode == 75} {this.knobs.[3].inc(true, hold, off);}
-				{keycode == 188} {this.menu.left()}
-				{keycode == 190} {this.menu.right()}
+				{keycode == 49  || keycode == 18} {this.pedals[0].toggle(hold, off);}
+				{keycode == 50  || keycode == 19} {this.pedals[1].toggle(hold, off);}
+				{keycode == 51  || keycode == 20} {this.pedals[2].toggle(hold, off);}
+				{keycode == 65  || keycode == 0 } {this.knobs.[0].inc(false, hold, off);}
+				{keycode == 83  || keycode == 1 } {this.knobs.[0].inc(true, hold, off);}
+				{keycode == 68  || keycode == 2 } {this.knobs.[1].inc(false, hold, off);}
+				{keycode == 70  || keycode == 3 } {this.knobs.[1].inc(true, hold, off);}
+				{keycode == 71  || keycode == 5 } {this.knobs.[2].inc(false, hold, off);}
+				{keycode == 72  || keycode == 4 } {this.knobs.[2].inc(true, hold, off);}
+				{keycode == 74  || keycode == 38} {this.knobs.[3].inc(false, hold, off);}
+				{keycode == 75  || keycode == 40} {this.knobs.[3].inc(true, hold, off);}
+				{keycode == 188 || keycode == 43} {this.menu.left()}
+				{keycode == 190 || keycode == 47} {this.menu.right()}
 			;
 		};
 
