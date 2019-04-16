@@ -7,7 +7,7 @@
     },
     "Darwin": {
         "ExtensionDir": "/Library/Application Support/SuperCollider/Extensions/",
-        "SC_PATH": "~/Capstone/supercollider_src",
+        "SC_PATH": "~/School/ComputerScience/capstone/SC-Source/",
         "Generator": "Unix Makefiles",
         "Make": "make"
     },
@@ -15,6 +15,8 @@
 
     "plugins": [
         "Overdrive01",
-        "DirectOut"
+        "DirectOut",
+        "AnalogEcho",
+        "BitCrusher"
     ]
 }
