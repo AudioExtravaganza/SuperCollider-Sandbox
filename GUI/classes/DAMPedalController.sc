@@ -915,7 +915,7 @@ DAMLooper : DAMChain {
 			this.recSynth.free;
 			this.recSynth = nil;
 		};
-		if(this.buffer){
+		if(this.buffer != nil){
 			this.buffer.free;
 			this.buffer = nil;
 		};

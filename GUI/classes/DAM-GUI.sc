@@ -634,13 +634,14 @@ DAMGUI {
 		this.win.view.keyDownAction = {
 			arg view, char, mod, uni, keycode, key;
 			var hold, off;
-			hold = mod == 131072;
-			off = mod == 262144;
+			hold = (mod == 131072 || mod == 148576);
+			off = (mod == 262144 || mod == 131072);
 			keycode.postln;
+			mod.postln;
 			case
-				{keycode == 49} {this.pedals[0].toggle(hold, off);}
-				{keycode == 50} {this.pedals[1].toggle(hold, off);}
-				{keycode == 51} {this.pedals[2].toggle(hold, off);}
+				{keycode == 49 || keycode == 18} {this.pedals[0].toggle(hold, off);}
+				{keycode == 50 || keycode == 19} {this.pedals[1].toggle(hold, off);}
+				{keycode == 51 || keycode == 20} {this.pedals[2].toggle(hold, off);}
 				{keycode == 65} {this.knobs.[0].inc(false, hold, off);}
 				{keycode == 83} {this.knobs.[0].inc(true, hold, off);}
 				{keycode == 68} {this.knobs.[1].inc(false, hold, off);}
