@@ -636,6 +636,7 @@ DAMGUI {
 			var hold, off;
 			hold = mod == 131072;
 			off = mod == 262144;
+			keycode.postln;
 			case
 				{keycode == 49} {this.pedals[0].toggle(hold, off);}
 				{keycode == 50} {this.pedals[1].toggle(hold, off);}
